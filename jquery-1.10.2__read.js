@@ -43,6 +43,7 @@ var
 	docElem = document.documentElement,
 
 	// Map over jQuery in case of overwrite
+	// 设置别名，防止被污染
 	_jQuery = window.jQuery,
 
 	// Map over the $ in case of overwrite
@@ -69,8 +70,16 @@ var
 	core_trim = core_version.trim,
 
 	// Define a local copy of jQuery
+	// 实例化 jQuery 对象
+	// $('#xxx') || $('.xxx')
 	jQuery = function( selector, context ) {
 		// The jQuery object is actually just the init constructor 'enhanced'
+		// jQuery 没有使用 new 运算符将 jQuery 显示的实例化，而是直接调用其函数
+		// 要实现这样,那么 jQuery 就要看成一个类，且返回一个正确的实例
+		// 且实例还要能正确访问 jQuery 类原型上的属性与方法
+		// 通过原型传递解决问题，把 jQuery 的原型传递给jQuery.prototype.init.prototype
+		// jQuery.fn.init.prototype = jQuery.fn;
+		// 所以通过这个方法生成的实例 this 所指向的 仍然是 jQuery.fn(jQuery.prototype)，所以能正确访问 jQuery 类原型上的属性与方法
 		return new jQuery.fn.init( selector, context, rootjQuery );
 	},
 
@@ -3200,24 +3209,40 @@ jQuery.Callbacks = function( options ) {
 
 	return self;
 };
+
+// 当jQuery.extend只有一个参数的时候，其实就是对jQuery静态方法的一个扩展
+// jQuery 整体架构 对 extend 的解析
+// http://www.cnblogs.com/aaronjs/p/3278578.html
 jQuery.extend({
 
+	// Deferred 方法
+	// 生成的 deferred 对象就是 jQuery 的回调函数解决方案
 	Deferred: function( func ) {
 		var tuples = [
 				// action, add listener, listener list, final state
+				// deferred 对象有三种状态，分别是 resolved、rejected、notify
+				// resolved 对应 已完成
+				// resolved 对象立刻调用 done()方法指定的回调函数
+				// rejected 对应 已失败
+				// rejected 对象立刻调用 fail()方法指定的回调函数
+				// 
 				[ "resolve", "done", jQuery.Callbacks("once memory"), "resolved" ],
 				[ "reject", "fail", jQuery.Callbacks("once memory"), "rejected" ],
 				[ "notify", "progress", jQuery.Callbacks("memory") ]
 			],
+			// pending -- 待定
 			state = "pending",
 			promise = {
 				state: function() {
 					return state;
 				},
+				// 这个方法也是用来指定回调函数的
+				// 它的作用是，不管调用的是deferred.resolve()还是deferred.reject()，最后总是执行
 				always: function() {
 					deferred.done( arguments ).fail( arguments );
 					return this;
 				},
+				// 把done()、fail()和progrss()合在一起写
 				then: function( /* fnDone, fnFail, fnProgress */ ) {
 					var fns = arguments;
 					return jQuery.Deferred(function( newDefer ) {
