@@ -96,6 +96,8 @@ var
 	// A simple way to check for HTML strings
 	// Prioritize #id over <tag> to avoid XSS via location.hash (#9521)
 	// Strict HTML recognition (#11290: must start with <)
+	// 一个简单的检测HTML字符串的表达式
+	// 要看懂 jQuery 中的正则匹配，还必须深入理解 exec() 方法
 	rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]*))$/,
 
 	// Match a standalone tag
@@ -156,22 +158,30 @@ jQuery.fn = jQuery.prototype = {
 
 		// HANDLE: $(""), $(null), $(undefined), $(false)
 		// 如果传入的参数为空，则直接返回this
+		// 处理"",null,undefined,false,返回this ，增加程序的健壮性
 		if ( !selector ) {
 			return this;
 		}
 
 		// Handle HTML strings
-		// 匹配的是 /^<\.+>$/
+		// 处理字符串
 		if ( typeof selector === "string" ) {
+			// 匹配的是 /^<\.+>$/
+			// 也就是以  "<"开始，">"结尾
 			if ( selector.charAt(0) === "<" && selector.charAt( selector.length - 1 ) === ">" && selector.length >= 3 ) {
 				// Assume that strings that start and end with <> are HTML and skip the regex check
+				// 如果selector是html标签组成的话，match的组成直接如下
 				match = [ null, selector, null ];
 
+			// 并非是以  "<"开始，">"结尾
 			} else {
+				// 使用 exec 处理 selector ，得到数组match
+				// rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]*))$/ 简单的检测 HTML 字符串的表达式
 				match = rquickExpr.exec( selector );
 			}
 
 			// Match html or make sure no context is specified for #id
+			// 匹配的html或确保没有上下文指定为# id
 			if ( match && (match[1] || !context) ) {
 
 				// HANDLE: $(html) -> $(array)
@@ -202,7 +212,9 @@ jQuery.fn = jQuery.prototype = {
 					return this;
 
 				// HANDLE: $(#id)
+				// 处理id
 				} else {
+					// match[2] 是匹配到的 id 名
 					elem = document.getElementById( match[2] );
 
 					// Check parentNode to catch when Blackberry 4.6 returns
@@ -235,6 +247,7 @@ jQuery.fn = jQuery.prototype = {
 			}
 
 		// HANDLE: $(DOMElement)
+		// 处理DOMElement,返回修改过后的this
 		} else if ( selector.nodeType ) {
 			this.context = this[0] = selector;
 			this.length = 1;
@@ -242,9 +255,11 @@ jQuery.fn = jQuery.prototype = {
 
 		// HANDLE: $(function)
 		// Shortcut for document ready
+		// 处理$(function(){})
 		} else if ( jQuery.isFunction( selector ) ) {
 			return rootjQuery.ready( selector );
 		}
+
 
 		if ( selector.selector !== undefined ) {
 			this.selector = selector.selector;
