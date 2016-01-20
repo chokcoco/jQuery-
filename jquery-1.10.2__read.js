@@ -47,6 +47,7 @@ var
 	_jQuery = window.jQuery,
 
 	// Map over the $ in case of overwrite
+	// 设置别名，防止被污染
 	_$ = window.$,
 
 	// [[Class]] -> type pairs
@@ -1003,6 +1004,7 @@ jQuery.ready.promise = function( obj ) {
 		}
 	}
 	// 函数返回的是deferred对象，这就可以加上链式操作了
+	// 可以使用 .done .fail 等方法
 	return readyList.promise( obj );
 };
 
