@@ -137,11 +137,20 @@ var
 		}
 	};
 
+// 给 jQuery.prototype 设置别名 jQuery.fn
+// jQuery.prototype 即是 jQuery的原型，挂载在 jQuery.prototype 上的方法，即可让所有 jQuery 对象使用
 jQuery.fn = jQuery.prototype = {
 	// The current version of jQuery being used
+	// 当前版本
 	jquery: core_version,
 
+	// 构造函数
+	// 相当于 jQuery.prototype.constructor = jQuery
 	constructor: jQuery,
+
+	// 初始化方法
+	// 即  $('#xxx') || $('.xxx') 等实际上最后是调用这个方法(new jQuery.fn.init( selector, context, rootjQuery ) )
+	// $('#xxx') -> new jQuery('#xxx') 
 	init: function( selector, context, rootjQuery ) {
 		var match, elem;
 
@@ -152,6 +161,7 @@ jQuery.fn = jQuery.prototype = {
 		}
 
 		// Handle HTML strings
+		// 匹配的是 /^<\.+>$/
 		if ( typeof selector === "string" ) {
 			if ( selector.charAt(0) === "<" && selector.charAt( selector.length - 1 ) === ">" && selector.length >= 3 ) {
 				// Assume that strings that start and end with <> are HTML and skip the regex check
