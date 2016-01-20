@@ -71,8 +71,8 @@ var
 	core_trim = core_version.trim,
 
 	// Define a local copy of jQuery
-	// 实例化 jQuery 对象
-	// $('#xxx') || $('.xxx')
+	// 实例化 jQuery 对象 ,selector 是选择器，context 是上下文
+	// 用法：$('#xxx') || $('<div></div>', { class: 'css-class', data-name: 'data-val' }); 
 	jQuery = function( selector, context ) {
 		// The jQuery object is actually just the init constructor 'enhanced'
 		// jQuery 没有使用 new 运算符将 jQuery 显示的实例化，而是直接调用其函数
@@ -101,6 +101,10 @@ var
 	rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]*))$/,
 
 	// Match a standalone tag
+	// 这个正则匹配的是 纯HTML标签,不带任何属性 ，如 '<html></html>' 或者 '<img/>'
+	// rsingleTag.test('<html></html>') --> true
+	// rsingleTag.test('<img/>') --> true
+	// rsingleTag.test('<div class="foo"></div>') --> false
 	rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>|)$/,
 
 	// JSON RegExp
@@ -151,8 +155,9 @@ jQuery.fn = jQuery.prototype = {
 	constructor: jQuery,
 
 	// 初始化方法
-	// 即  $('#xxx') || $('.xxx') 等实际上最后是调用这个方法(new jQuery.fn.init( selector, context, rootjQuery ) )
+	// 即 构造jQuery对象实际上最后是调用这个方法(new jQuery.fn.init( selector, context, rootjQuery ) )
 	// $('#xxx') -> new jQuery('#xxx') 
+	// 这个方法可以称作 jQuery对象构造器
 	init: function( selector, context, rootjQuery ) {
 		var match, elem;
 
@@ -166,11 +171,14 @@ jQuery.fn = jQuery.prototype = {
 		// Handle HTML strings
 		// 处理字符串
 		if ( typeof selector === "string" ) {
-			// 匹配的是 /^<\.+>$/
-			// 也就是以  "<"开始，">"结尾
+			// 下面这个 if 条件判断是先给 match 变量赋值
+			// if 条件相当于这个正则式 /^<\.+>$/
+			// 也就是以  "<"开始，">"结尾，且长度大于等于3 ，
+			// ex. <p> <html> 
 			if ( selector.charAt(0) === "<" && selector.charAt( selector.length - 1 ) === ">" && selector.length >= 3 ) {
 				// Assume that strings that start and end with <> are HTML and skip the regex check
 				// 如果selector是html标签组成的话，match的组成直接如下
+				// match[1] = selecetor 即匹配的是 (<[\w\W]+>)
 				match = [ null, selector, null ];
 
 			// 并非是以  "<"开始，">"结尾
@@ -185,10 +193,14 @@ jQuery.fn = jQuery.prototype = {
 			if ( match && (match[1] || !context) ) {
 
 				// HANDLE: $(html) -> $(array)
+				// match[1] 为true的情况，是上面的这一句 match = [ null, selector, null ]
 				if ( match[1] ) {
+					// 传入上下文
 					context = context instanceof jQuery ? context[0] : context;
 
 					// scripts is true for back-compat
+					// 合并两个数组内容到第一个数组
+					// jQuery.parseHTML -> 使用原生的DOM元素的创建函数，将字符串转换为DOM元素数组，然后可以插入到文档中
 					jQuery.merge( this, jQuery.parseHTML(
 						match[1],
 						context && context.nodeType ? context.ownerDocument || context : document,
@@ -196,6 +208,17 @@ jQuery.fn = jQuery.prototype = {
 					) );
 
 					// HANDLE: $(html, props)
+					// 这个 if 语句的作用是当 传入的selector 是纯 HTML 标签，且 context 不为空，相当于
+					// var jqHTML = $('<div></div>', { class: 'css-class', data-name: 'data-val' }); 
+					// console.log(jqHTML.attr('class')); //css-class 
+					// console.log(jqHTML.attr('data-name')); //data-val
+					// rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>|)$/
+					// 上面这个正则匹配的是 纯HTML标签,不带任何属性 ，如 '<html></html>' 或者 '<img/>'
+					// rsingleTag.test('<html></html>') --> true
+					// rsingleTag.test('<img/>') --> true
+					// rsingleTag.test('<div class="foo"></div>') --> false
+					// jQuery.isPlainObject 用于测试是否为纯粹的对象
+					// 纯粹的对象指的是 通过 "{}" 或者 "new Object" 创建的
 					if ( rsingleTag.test( match[1] ) && jQuery.isPlainObject( context ) ) {
 						for ( match in context ) {
 							// Properties of context are called as methods if possible
@@ -212,7 +235,9 @@ jQuery.fn = jQuery.prototype = {
 					return this;
 
 				// HANDLE: $(#id)
-				// 处理id
+				// 处理id -> $('#id')
+				// 反之，match[1]为false 的情况下，是上面的 match = rquickExpr.exec( selector )
+				// 
 				} else {
 					// match[2] 是匹配到的 id 名
 					elem = document.getElementById( match[2] );
@@ -237,12 +262,20 @@ jQuery.fn = jQuery.prototype = {
 				}
 
 			// HANDLE: $(expr, $(...))
+			// 如果第一个参数是一个.className ，第二参数为一个选择器
 			} else if ( !context || context.jquery ) {
+				// rootjQuery 相当于 jQuery(document)
+				// 下面的return 相当于 $(context).find( selector )
+				// (如果 context 为空) jQuery(document).find( selector )
 				return ( context || rootjQuery ).find( selector );
 
 			// HANDLE: $(expr, context)
 			// (which is just equivalent to: $(context).find(expr)
+			// 如果第一个参数是.className，第二个参数是一个上下文对象
+			// 等同于处理$(.className .className)
 			} else {
+				// this.constructor 即是 jQuery
+				// this.constructor( context ).find( selector ) -> jQuery(context).find(selector)
 				return this.constructor( context ).find( selector );
 			}
 
@@ -260,7 +293,8 @@ jQuery.fn = jQuery.prototype = {
 			return rootjQuery.ready( selector );
 		}
 
-
+		// 匹配选择器里嵌套了一个选择器
+		// $($('#container')) 相当于 $('#container')
 		if ( selector.selector !== undefined ) {
 			this.selector = selector.selector;
 			this.context = selector.context;
@@ -273,14 +307,20 @@ jQuery.fn = jQuery.prototype = {
 	selector: "",
 
 	// The default length of a jQuery object is 0
+	// jQuery 对象的默认长度为 0 
 	length: 0,
 
+	// 转换为数组
+	// 相当于 Array.prototype.slice.call(this)
+	// slice() 方法：https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
 	toArray: function() {
 		return core_slice.call( this );
 	},
 
 	// Get the Nth element in the matched element set OR
 	// Get the whole matched element set as a clean array
+	// 如果 num 不为0 ，将返回一个选择器数组
+	// （否则）返回 index 为 num 的 jQuery 对象
 	get: function( num ) {
 		return num == null ?
 
@@ -288,17 +328,26 @@ jQuery.fn = jQuery.prototype = {
 			this.toArray() :
 
 			// Return just the object
+			// 负数即是可以反向选取
 			( num < 0 ? this[ this.length + num ] : this[ num ] );
 	},
 
 	// Take an array of elements and push it onto the stack
 	// (returning the new matched element set)
+	// 将一个 DOM 元素集合加入到 jQuery 栈
+	// 此方法在 jQuery 的 DOM 操作中被频繁的使用, 如在parent(), find(), filter()中
+	// pushStack() 方法通过改变一个 jQuery 对象的 prevObject 属性来"跟踪"链式调用中前一个方法返回的DOM结果集
+	// 当我们再链式调用 end() 方法后, 内部就返回当前 jQuery 对象的 prevObject.
 	pushStack: function( elems ) {
 
 		// Build a new jQuery matched element set
+		// 构建一个新的jQuery对象，无参的 this.constructor()，只是返回引用this
+		// jQuery.merge 把 elems 节点，合并到新的 jQuery 对象
 		var ret = jQuery.merge( this.constructor(), elems );
 
 		// Add the old object onto the stack (as a reference)
+		// 给返回的新 jQuery 对象添加属性 prevObject
+		// 所以也就是为什么通过prevObject能取到上一个合集的引用了
 		ret.prevObject = this;
 		ret.context = this.context;
 
@@ -309,10 +358,12 @@ jQuery.fn = jQuery.prototype = {
 	// Execute a callback for every element in the matched set.
 	// (You can seed the arguments with an array of args, but this is
 	// only used internally.)
+	// 具体实现
 	each: function( callback, args ) {
 		return jQuery.each( this, callback, args );
 	},
 
+	// 
 	ready: function( fn ) {
 		// Add the callback
 		jQuery.ready.promise().done( fn );
@@ -320,18 +371,22 @@ jQuery.fn = jQuery.prototype = {
 		return this;
 	},
 
+	// 构建一个新的jQuery对象数组，并可以回溯回上一个对象
 	slice: function() {
 		return this.pushStack( core_slice.apply( this, arguments ) );
 	},
 
+	// 取当前 jQuery 对象的第一个
 	first: function() {
 		return this.eq( 0 );
 	},
 
+	// 取当前 jQuery 对象的最后一个
 	last: function() {
 		return this.eq( -1 );
 	},
 
+	// 取当前 jQuery 对象的第 i 个
 	eq: function( i ) {
 		var len = this.length,
 			j = +i + ( i < 0 ? len : 0 );
@@ -344,6 +399,7 @@ jQuery.fn = jQuery.prototype = {
 		}));
 	},
 
+	// 回溯链式调用的上一个对象
 	end: function() {
 		return this.prevObject || this.constructor(null);
 	},
@@ -356,6 +412,12 @@ jQuery.fn = jQuery.prototype = {
 };
 
 // Give the init function the jQuery prototype for later instantiation
+// jQuery 没有使用 new 运算符将 jQuery 显示的实例化，而是直接调用其函数
+// 要实现这样,那么 jQuery 就要看成一个类，且返回一个正确的实例
+// 且实例还要能正确访问 jQuery 类原型上的属性与方法
+// 通过原型传递解决问题，把 jQuery 的原型传递给jQuery.prototype.init.prototype
+// jQuery.fn.init.prototype = jQuery.fn;
+// 所以通过这个方法生成的实例 this 所指向的 仍然是 jQuery.fn(jQuery.prototype)，所以能正确访问 jQuery 类原型上的属性与方法
 jQuery.fn.init.prototype = jQuery.fn;
 
 // 扩展函数
@@ -367,51 +429,71 @@ jQuery.extend = jQuery.fn.extend = function() {
 		deep = false;
 
 	// Handle a deep copy situation
+	// target 是传入的第一个参数
+	// 如果第一个参数是布尔类型，则表示是否要深递归，
 	if ( typeof target === "boolean" ) {
 		deep = target;
 		target = arguments[1] || {};
 		// skip the boolean and the target
+		// 如果传了类型为 boolean 的第一个参数，i 则从 2 开始
 		i = 2;
 	}
 
 	// Handle case when target is a string or something (possible in deep copy)
+	// 如果传入的第一个参数是 字符串或者其他
 	if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
 		target = {};
 	}
 
 	// extend jQuery itself if only one argument is passed
+	// 如果参数的长度为 1 ，表示是 jQuery 静态方法
 	if ( length === i ) {
 		target = this;
 		--i;
 	}
 
+	// 可以传入多个复制源
+	// i 是从 1或2 开始的
 	for ( ; i < length; i++ ) {
 		// Only deal with non-null/undefined values
+		// 将每个源的属性全部复制到 target 上
 		if ( (options = arguments[ i ]) != null ) {
 			// Extend the base object
 			for ( name in options ) {
+				// src 是源（即本身）的值
+				// copy 是即将要复制过去的值
 				src = target[ name ];
 				copy = options[ name ];
 
 				// Prevent never-ending loop
+				// 防止有环，例如 extend(true, target, {'target':target});
 				if ( target === copy ) {
 					continue;
 				}
 
 				// Recurse if we're merging plain objects or arrays
+				// 这里是递归调用，最终都会到下面的 else if 分支
+				// jQuery.isPlainObject 用于测试是否为纯粹的对象
+				// 纯粹的对象指的是 通过 "{}" 或者 "new Object" 创建的
+				// 如果是深复制
 				if ( deep && copy && ( jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)) ) ) {
+					// 数组
 					if ( copyIsArray ) {
 						copyIsArray = false;
 						clone = src && jQuery.isArray(src) ? src : [];
 
+					// 对象
 					} else {
 						clone = src && jQuery.isPlainObject(src) ? src : {};
 					}
 
 					// Never move original objects, clone them
+					// 递归
 					target[ name ] = jQuery.extend( deep, clone, copy );
 
 				// Don't bring in undefined values
+				// 最终都会到这条分支
+				// 简单的值覆盖
 				} else if ( copy !== undefined ) {
 					target[ name ] = copy;
 				}
@@ -420,6 +502,9 @@ jQuery.extend = jQuery.fn.extend = function() {
 	}
 
 	// Return the modified object
+	// 返回新的 target
+	// 如果 i < length ，是直接返回没经过处理的 target，也就是 arguments[0]
+	// 也就是如果不传需要覆盖的源，调用 $.extend 其实是增加 jQuery 的静态方法
 	return target;
 };
 
@@ -458,6 +543,7 @@ jQuery.extend({
 	},
 
 	// Handle when the DOM is ready
+	// 
 	ready: function( wait ) {
 
 		// Abort if there are pending holds or we're already ready
@@ -674,21 +760,31 @@ jQuery.extend({
 	},
 
 	// args is for internal usage only
+	// 遍历一个数组或者对象
+	// obj 是需要遍历的数组或者对象
+  // callback 是处理数组/对象的每个元素的回调函数，它的返回值实际会中断循环的过程
+  // args 是额外的参数数组
 	each: function( obj, callback, args ) {
 		var value,
 			i = 0,
 			length = obj.length,
-			isArray = isArraylike( obj );
+			isArray = isArraylike( obj ); // 判断是不是数组
 
+	  // 传了第三个参数	
 		if ( args ) {
 			if ( isArray ) {
 				for ( ; i < length; i++ ) {
+					// 相当于:
+        	// args = [arg1, arg2, arg3];
+       	  // callback(args1, args2, args3)。然后callback里边的this指向了obj[i]
 					value = callback.apply( obj[ i ], args );
 
 					if ( value === false ) {
+						// 注意到，当callback函数返回值会false的时候，注意是全等！循环结束
 						break;
 					}
 				}
+			// 非数组	
 			} else {
 				for ( i in obj ) {
 					value = callback.apply( obj[ i ], args );
@@ -701,14 +797,19 @@ jQuery.extend({
 
 		// A special, fast, case for the most common use of each
 		} else {
+			// 数组
+			// 其实这里代码有点赘余，如果考虑代码的简洁性牺牲一点点性能
+			// 在处理数组的情况下，也是可以用 for(i in obj)的
 			if ( isArray ) {
 				for ( ; i < length; i++ ) {
+					// 相当于callback(i, obj[i])。然后callback里边的this指向了obj[i]
 					value = callback.call( obj[ i ], i, obj[ i ] );
 
 					if ( value === false ) {
 						break;
 					}
 				}
+			// 非数组	
 			} else {
 				for ( i in obj ) {
 					value = callback.call( obj[ i ], i, obj[ i ] );
