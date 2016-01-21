@@ -43,7 +43,7 @@ var
 	docElem = document.documentElement,
 
 	// Map over jQuery in case of overwrite
-	// 设置别名，防止被污染
+	// 设置别名，通过两个私有变量映射了 window 环境下的 jQuery 和 $ 两个对象，以防止变量被强行覆盖
 	_jQuery = window.jQuery,
 
 	// Map over the $ in case of overwrite
@@ -363,11 +363,17 @@ jQuery.fn = jQuery.prototype = {
 		return jQuery.each( this, callback, args );
 	},
 
-	// 
+  // 可以看出 ready 回调是绑定在 jQuery 的实例上的
+  // $(document).ready(fn)
+  // $("#id").ready(fn)
+  // 都调用此处
 	ready: function( fn ) {
 		// Add the callback
+		// 这里的 jQuery.ready.promise() 返回异步队列
+    // 调用异步队列的 done 方法，把 fn 回调加入成功队列里边去
 		jQuery.ready.promise().done( fn );
 
+		// 支持jQuery的链式操作
 		return this;
 	},
 
@@ -509,17 +515,35 @@ jQuery.extend = jQuery.fn.extend = function() {
 };
 
 // 一些工具函数
+// jQuery.extend(object)  为扩展jQuery类本身.为类添加新的方法。 
+// jQuery.fn.extend(object) 给jQuery对象添加方法。 
 jQuery.extend({
 	// Unique for each copy of jQuery on the page
 	// Non-digits removed to match rinlinejQuery
 	expando: "jQuery" + ( core_version + Math.random() ).replace( /\D/g, "" ),
 
+	// noConflict() 方法让出变量 $ 的 jQuery 控制权，这样其他脚本就可以使用它了
+	// 通过全名替代简写的方式来使用 jQuery 
+	// deep -- 布尔值。指示是否允许彻底将 jQuery 变量还原(移交 $ 引用的同时是否移交 jQuery 对象本身)
+	// 让出 jQuery $ 的控制权不代表不能在 jQuery 使用 $ ，方法如下 （）
+	//
+	//	var query = jQuery.noConflict(true);
+	//
+	// (function($) { 
+	//  
+	//     // 插件或其他形式的代码，也可以将参数设为 jQuery
+	//  })(query);
+	//
+	//  ... 其他用 $ 作为别名的库的代码
+	//  
 	noConflict: function( deep ) {
 		if ( window.$ === jQuery ) {
+			// 此时 jQuery 别名 $ 失效
 			window.$ = _$;
 		}
 
 		if ( deep && window.jQuery === jQuery ) {
+			// 如果 deep 为 true，此时 jQuery 失效
 			window.jQuery = _jQuery;
 		}
 
@@ -527,13 +551,23 @@ jQuery.extend({
 	},
 
 	// Is the DOM ready to be used? Set to true once it occurs.
+	// DOM ready 是否已经完成
 	isReady: false,
 
 	// A counter to track how many items to wait for before
 	// the ready event fires. See #6781
+	// 控制有多少个 holdReady 事件需要在 Dom ready 之前执行
 	readyWait: 1,
 
 	// Hold (or release) the ready event
+	// 方法允许调用者延迟 jQuery 的 ready 事件
+	// example. 延迟就绪事件，直到已加载的插件。
+	// 
+	// $.holdReady(true);
+	// $.getScript("myplugin.js", function() {
+  //   $.holdReady(false);
+	// });
+	// 
 	holdReady: function( hold ) {
 		if ( hold ) {
 			jQuery.readyWait++;
@@ -547,19 +581,31 @@ jQuery.extend({
 	ready: function( wait ) {
 
 		// Abort if there are pending holds or we're already ready
+		// 如果需要等待，holdReady()的时候，把hold住的次数减1，如果还没到达0，说明还需要继续hold住，return掉
+    // 如果不需要等待，判断是否已经Ready过了，如果已经ready过了，就不需要处理了。异步队列里边的done的回调都会执行了
 		if ( wait === true ? --jQuery.readyWait : jQuery.isReady ) {
 			return;
 		}
 
 		// Make sure body exists, at least, in case IE gets a little overzealous (ticket #5443).
+		// 确定 body 存在
 		if ( !document.body ) {
+			// 如果 body 还不存在 ，DOMContentLoaded 未完成，此时
+			// 将 jQuery.ready 放入定时器 setTimeout 中
+			// 不带时间参数的 setTimeout(a) 相当于 setTimeout(a,0)
+			// 但是这里并不是立即触发 jQuery.ready
+			// 由于 javascript 的单线程的异步模式 
+			// setTimeout(jQuery.ready) 会等到重绘完成才执行代码，也就是 DOMContentLoaded 之后才执行 jQuery.ready
+			// 所以这里有个小技巧：在 setTimeout 中触发的函数, 一定会在 DOM 准备完毕后触发
 			return setTimeout( jQuery.ready );
 		}
 
 		// Remember that the DOM is ready
+		// 记录 DOM ready 已经完成
 		jQuery.isReady = true;
 
 		// If a normal DOM Ready event fired, decrement, and wait if need be
+		// wait 为 false 表示ready事情未触发过，否则 return
 		if ( wait !== true && --jQuery.readyWait > 0 ) {
 			return;
 		}
@@ -1067,8 +1113,8 @@ jQuery.extend({
 jQuery.ready.promise = function( obj ) {
 	if ( !readyList ) {
 
-		// 新建一个 Deferred 对象
-		// Deferred 用于处理异步延时回调函数
+		// 如果没有，新建一个 Deferred 对象
+		// Deferred 用于处理异步延时回调函数，也就是内部用于 ready 的一个异步队列
 		readyList = jQuery.Deferred();
 
 		// Catch cases where $(document).ready() is called after the browser event has already occurred.
@@ -1101,19 +1147,26 @@ jQuery.ready.promise = function( obj ) {
 
 			// If IE and not a frame
 			// continually check to see if the document is ready
+			// 如果是 IE 且不是在 frame 中
 			var top = false;
 
 			try {
 				top = window.frameElement == null && document.documentElement;
 			} catch(e) {}
 
+			// 如果是IE并且不是iframe
 			if ( top && top.doScroll ) {
+				// 这里有个立即执行函数 doScrollCheck()
 				(function doScrollCheck() {
 					if ( !jQuery.isReady ) {
 
 						try {
 							// Use the trick by Diego Perini
 							// http://javascript.nwbox.com/IEContentLoaded/
+							// Diego Perini 在 2007 年的时候，报告了一种检测 IE 是否加载完成的方式，使用 doScroll 方法调用
+							// 原理就是对于 IE 在非 iframe 内时，只有不断地通过能否执行 doScroll 判断 DOM 是否加载完毕
+							// 在上述中间隔 50 毫秒尝试去执行 doScroll，注意，由于页面没有加载完成的时候，调用 doScroll 会导致异常，所以使用了 try - catch 来捕获异常
+							// 直到DOM渲染结束了，这个时候 doScroll 方法不会抛出异常，然后就调用$.ready()
 							top.doScroll("left");
 						} catch(e) {
 							return setTimeout( doScrollCheck, 50 );
