@@ -29,7 +29,7 @@ var
 	readyList,
 
 	// A central reference to the root jQuery(document)
-	// 
+	// 所有jQuery 对象最后的指向应该都是回到 jQuery(document)
 	rootjQuery,
 
 	// Support: IE<10
@@ -51,17 +51,28 @@ var
 	_$ = window.$,
 
 	// [[Class]] -> type pairs
+	// 储存了常见类型的 typeof 的哈希表
+	// Boolean Number String Function Array Date RegExp Object Error
+	// 其次，这里定义了一个空对象 {} ，如果下文行文需要调用对象的 toString 和 hasOwnProperty 方法
+	// 将会调用 core_toString 和 core_hasOwn ，这两个变量事先存储好了这两个方法的入口
+	// 节省查找内存地址时间，提高效率
 	class2type = {},
 
 	// 定义当前版本
+	// 其次，这里定义了一个字符串对象 ，如果下文行文需要调用字符串对象的 trim 方法
+	// 将会调用 core_trim ，这个变量事先存储好了 String.trim 方法的入口  
+	// 节省查找内存地址时间，提高效率
 	core_version = "1.10.2",
 
 	// List of deleted data cache ids, so we can reuse them
-	// 定义一个数组，缓存数组的一些常用方法
+	// 其次，这里定义了一个空的数组对象 ，如果下文行文需要调用数组对象的 concat 、push 、slice 、indexOf 方法
+	// 将会调用 core_concat 、core_push 、core_slice 、和 core_indexOf ，这四个变量事先存储好了这四个方法的入口
 	// 节省查找内存地址时间，提高效率
+	// 同时使用 call 或 apply 调用这些方法也可以使类数组也能用到数组的方法
 	core_deletedIds = [],
 
 	// Save a reference to some core methods
+	// 定义这几个变量的作用如上所述
 	core_concat = core_deletedIds.concat,
 	core_push = core_deletedIds.push,
 	core_slice = core_deletedIds.slice,
@@ -91,6 +102,9 @@ var
 	core_rnotwhite = /\S+/g,
 
 	// Make sure we trim BOM and NBSP (here's looking at you, Safari 5.0 and IE)
+	// 确保去除 BOM 和 $nbsp; 
+	// | 分割的两部分是一样，分别匹配头尾的空格
+	// 最快的trim方法请看：http://www.cnblogs.com/rubylouvre/archive/2009/09/18/1568794.html
 	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
 
 	// A simple way to check for HTML strings
@@ -611,9 +625,15 @@ jQuery.extend({
 		}
 
 		// If there are functions bound, to execute
+		// 调用异步队列，然后派发成功事件出去（最后使用done接收，把上下文切换成document，默认第一个参数是jQuery。
 		readyList.resolveWith( document, [ jQuery ] );
 
 		// Trigger any bound ready events
+		// 最后jQuery还可以触发自己的ready事件
+    // 例如：
+    //    $(document).on('ready', fn2);
+    //    $(document).ready(fn1);
+    // 这里的fn1会先执行，自己的ready事件绑定的fn2回调后执行
 		if ( jQuery.fn.trigger ) {
 			jQuery( document ).trigger("ready").off("ready");
 		}
@@ -622,32 +642,38 @@ jQuery.extend({
 	// See test/unit/core.js for details concerning isFunction.
 	// Since version 1.3, DOM methods and functions like alert
 	// aren't supported. They return false on IE (#2968).
+	// 判断传入对象是否为 function
 	isFunction: function( obj ) {
 		return jQuery.type(obj) === "function";
 	},
-
+	// 判断传入对象是否为数组
 	isArray: Array.isArray || function( obj ) {
 		return jQuery.type(obj) === "array";
 	},
-
+	// 判断传入对象是否为 window 对象
 	isWindow: function( obj ) {
 		/* jshint eqeqeq: false */
 		return obj != null && obj == obj.window;
 	},
-
+	// 确定它的参数是否是一个数字
 	isNumeric: function( obj ) {
 		return !isNaN( parseFloat(obj) ) && isFinite( obj );
 	},
 
+	// 确定JavaScript 对象的类型
 	type: function( obj ) {
+		// 如果传入的为 null --> $.type(null)
+		// "null"
 		if ( obj == null ) {
 			return String( obj );
 		}
+		// 利用事先存好的 hash 表 class2type 作精准判断
 		return typeof obj === "object" || typeof obj === "function" ?
 			class2type[ core_toString.call(obj) ] || "object" :
 			typeof obj;
 	},
-
+	// 测试对象是否是纯粹的对象
+	// 通过 "{}" 或者 "new Object" 创建的
 	isPlainObject: function( obj ) {
 		var key;
 
@@ -684,7 +710,7 @@ jQuery.extend({
 
 		return key === undefined || core_hasOwn.call( obj, key );
 	},
-
+	// 检查对象是否为空（不包含任何属性）
 	isEmptyObject: function( obj ) {
 		var name;
 		for ( name in obj ) {
@@ -692,28 +718,50 @@ jQuery.extend({
 		}
 		return true;
 	},
-
+	// 为 JavaScript 的 "error" 事件绑定一个处理函数
 	error: function( msg ) {
 		throw new Error( msg );
 	},
-
 	// data: string of html
 	// context (optional): If specified, the fragment will be created in this context, defaults to document
 	// keepScripts (optional): If true, will include scripts passed in the html string
+	// 将字符串解析到一个 DOM 节点的数组中
+	// data -- 用来解析的HTML字符串
+	// context -- DOM元素的上下文，在这个上下文中将创建的HTML片段
+	// keepScripts  -- 一个布尔值，表明是否在传递的HTML字符串中包含脚本
 	parseHTML: function( data, context, keepScripts ) {
+		// 传入的 data 不是字符串，返回 null
 		if ( !data || typeof data !== "string" ) {
 			return null;
 		}
+
+		// 如果没有传上下文参数
+		// function(data,keepScripts)
 		if ( typeof context === "boolean" ) {
 			keepScripts = context;
 			context = false;
 		}
+
+		// 如果没有传上下文参数 , 将上下文参数置为 document
 		context = context || document;
 
+		// rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>|)$/;
+	  // 上面这个正则匹配的是 纯HTML标签,不带任何属性 ，如 '<html></html>' 或者 '<img/>'
+		// rsingleTag.test('<html></html>') --> true
+		// rsingleTag.test('<img/>') --> true
+		// rsingleTag.test('<div class="foo"></div>') --> false
 		var parsed = rsingleTag.exec( data ),
-			scripts = !keepScripts && [];
+			scripts = !keepScripts && []; 
+		// 这里相当于 
+		// if(!keepScripts){
+		// 	 scripts = [];
+		// }else{
+		// 	 scripts = !keepScripts;	
+		// }		
 
 		// Single tag
+		// 单个标签，如果捕获的 div 相当于
+		// return document.createElement('div');
 		if ( parsed ) {
 			return [ context.createElement( parsed[1] ) ];
 		}
@@ -784,12 +832,21 @@ jQuery.extend({
 	// Evaluates a script in a global context
 	// Workarounds based on findings by Jim Driscoll
 	// http://weblogs.java.net/blog/driscoll/archive/2009/09/08/eval-javascript-global-context
+	// 一个 eval 的变种（eval()：函数可计算某个字符串，并执行其中的的 JavaScript 代码）
+	// globalEval()函数用于全局性地执行一段JavaScript代码
+	// 该方法跟eval方法相比有一个作用域的范围差异即始终处于全局作用域下面
 	globalEval: function( data ) {
+		// 如果 data 不为空
 		if ( data && jQuery.trim( data ) ) {
 			// We use execScript on Internet Explorer
 			// We use an anonymous function so that context is window
 			// rather than jQuery in Firefox
+			// 如果 window.execScript 存在，则直接 window.execScript(data) 
+			// window.execScript 方法会根据提供的脚本语言执行一段脚本代码
+			// 现在是在IE跟旧版本的Chrome是支持此方法的，新版浏览器没有 window.execScript 这个API
 			( window.execScript || function( data ) {
+				// 这里为何不能直接：eval.call( window, data );
+        // 在chrome一些旧版本里eval.call( window, data )无效 
 				window[ "eval" ].call( window, data );
 			} )( data );
 		}
@@ -801,8 +858,19 @@ jQuery.extend({
 		return string.replace( rmsPrefix, "ms-" ).replace( rdashAlpha, fcamelCase );
 	},
 
+	// 获取 DOM 节点的节点名字或者判断其名字跟传入参数是否匹配
 	nodeName: function( elem, name ) {
+		// IE下，DOM节点的nodeName是大写的，例如DIV
+  	// 所以统一转成小写再判断
+  	// 这里不return elem.nodeName.toLowerCase();
+  	// 我认为原因是为了保持浏览器自身的对外的规则，避免所有引用nodeName都要做转换的动作
 		return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
+		// return a && b; 等同于
+		// if(a){
+		// 		return b;
+		// }else{
+		// 	  return a;
+		// }
 	},
 
 	// args is for internal usage only
@@ -871,31 +939,44 @@ jQuery.extend({
 	},
 
 	// Use native String.trim function wherever possible
+	// 去除字符串两端空格
+	// core_trim = core_version.trim,
+	// rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g
+	// \uFEFF 是 utf8 的字节序标记，详见：字节顺序标记 https://zh.wikipedia.org/wiki/%E4%BD%8D%E5%85%83%E7%B5%84%E9%A0%86%E5%BA%8F%E8%A8%98%E8%99%9F
+	// \xA0 是全角空格
 	trim: core_trim && !core_trim.call("\uFEFF\xA0") ?
-		function( text ) {
+		// 如果已经支持原生的 String 的 trim 方法
+		// 相当于等于下面这个方法 $.trim = function( text ) {...}
+		function( text ) { 
 			return text == null ?
 				"" :
 				core_trim.call( text );
 		} :
 
 		// Otherwise use our own trimming functionality
+		// 不支持原生的 String 的 trim 方法
 		function( text ) {
 			return text == null ?
 				"" :
+				// text + "" 强制类型转换 ，转换为 String 类型
 				( text + "" ).replace( rtrim, "" );
 		},
 
 	// results is for internal usage only
+	// 将类数组对象转换为数组对象
 	makeArray: function( arr, results ) {
 		var ret = results || [];
 
 		if ( arr != null ) {
+			// 如果arr是一个类数组对象，调用merge合到返回值
 			if ( isArraylike( Object(arr) ) ) {
 				jQuery.merge( ret,
 					typeof arr === "string" ?
 					[ arr ] : arr
 				);
 			} else {
+				// 如果不是数组，则将其放到返回数组末尾
+      	// 等同于ret.push(arr);
 				core_push.call( ret, arr );
 			}
 		}
@@ -903,10 +984,17 @@ jQuery.extend({
 		return ret;
 	},
 
+	// 在数组中查找指定值并返回它的索引（如果没有找到，则返回-1）
+	// elem 规定需检索的值。
+	// arr 数组
+	// i 可选的整数参数。规定在数组中开始检索的位置。它的合法取值是 0 到 arr.length - 1。如省略该参数，则将从数组首元素开始检索。
 	inArray: function( elem, arr, i ) {
 		var len;
 
 		if ( arr ) {
+			// 如果支持原生的 indexOf 方法，直接调用
+			// core_indexOf.call( arr, elem, i ) 相当于：
+			// Array.indexOf.call(arr,elem, i)
 			if ( core_indexOf ) {
 				return core_indexOf.call( arr, elem, i );
 			}
@@ -916,6 +1004,11 @@ jQuery.extend({
 
 			for ( ; i < len; i++ ) {
 				// Skip accessing in sparse arrays
+	      // jQuery这里的(i in arr)判断是为了跳过稀疏数组中的元素
+	      // 例如 var arr = []; arr[1] = 1;
+	      // 此时 arr == [undefined, 1]
+	      // 结果是 => (0 in arr == false) (1 in arr == true)
+	      // 测试了一下 $.inArray(undefined, arr, 0)是返回 -1 的
 				if ( i in arr && arr[ i ] === elem ) {
 					return i;
 				}
@@ -925,6 +1018,7 @@ jQuery.extend({
 		return -1;
 	},
 
+	// merge的两个参数必须为数组，作用就是修改第一个数组，使得它末尾加上第二个数组
 	merge: function( first, second ) {
 		var l = second.length,
 			i = first.length,
@@ -944,17 +1038,22 @@ jQuery.extend({
 
 		return first;
 	},
-
+	// 查找满足过滤函数的数组元素,原始数组不受影响
+	// elems 是传入的数组，callback 是过滤器，inv 为 true 则返回那些被过滤掉的值
 	grep: function( elems, callback, inv ) {
 		var retVal,
 			ret = [],
 			i = 0,
 			length = elems.length;
+		// !! 强制类型转换为 boolean 值	
 		inv = !!inv;
 
 		// Go through the array, only saving the items
 		// that pass the validator function
 		for ( ; i < length; i++ ) {
+			// !! 强制类型转换为 boolean 值
+			// 注意这里的 callback 参数是先 value,后 key
+    if ( inv !== retVal ) {
 			retVal = !!callback( elems[ i ], i );
 			if ( inv !== retVal ) {
 				ret.push( elems[ i ] );
@@ -965,6 +1064,7 @@ jQuery.extend({
 	},
 
 	// arg is for internal usage only
+	// 把数组每一项经过callback处理后的值依次加入到返回数组中
 	map: function( elems, callback, arg ) {
 		var value,
 			i = 0,
@@ -973,6 +1073,7 @@ jQuery.extend({
 			ret = [];
 
 		// Go through the array, translating each of the items to their
+		// 如果传入的 elems 是数组
 		if ( isArray ) {
 			for ( ; i < length; i++ ) {
 				value = callback( elems[ i ], i, arg );
@@ -983,6 +1084,7 @@ jQuery.extend({
 			}
 
 		// Go through every key on the object,
+		// 如果传入的 elems 是对象
 		} else {
 			for ( i in elems ) {
 				value = callback( elems[ i ], i, arg );
@@ -994,6 +1096,7 @@ jQuery.extend({
 		}
 
 		// Flatten any nested arrays
+		// 这里相当于 var a = [];a.concat(ret)
 		return core_concat.apply( [], ret );
 	},
 
@@ -1002,6 +1105,9 @@ jQuery.extend({
 
 	// Bind a function to a context, optionally partially applying any
 	// arguments.
+	// 接受一个函数，然后返回一个新函数，并且这个新函数始终保持了特定的上下文语境
+	// fn -- 将要改变上下文语境的函数
+	// context -- 函数的上下文语境( this )会被设置成这个 object 对象
 	proxy: function( fn, context ) {
 		var args, proxy, tmp;
 
@@ -1018,6 +1124,7 @@ jQuery.extend({
 		}
 
 		// Simulated bind
+		// 将参数转化为数组
 		args = core_slice.call( arguments, 2 );
 		proxy = function() {
 			return fn.apply( context || this, args.concat( core_slice.call( arguments ) ) );
@@ -1082,6 +1189,7 @@ jQuery.extend({
 				length ? fn( elems[0], key ) : emptyGet;
 	},
 
+	// 获取当前时间
 	now: function() {
 		return ( new Date() ).getTime();
 	},
@@ -1188,6 +1296,9 @@ jQuery.ready.promise = function( obj ) {
 };
 
 // Populate the class2type map
+// typeof并不能区分出它是Array类型，jQuery为了扩展typeof的表达力，因此扩展了type方法
+// 针对一些特殊的对象（例如null，window，RegExp）也进行精准的类型判断
+// 判断类型前，将常见类型打表，先存于一个 Hash 表 class2type 里边
 jQuery.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(i, name) {
 	class2type[ "[object " + name + "]" ] = name.toLowerCase();
 });
@@ -1211,8 +1322,8 @@ function isArraylike( obj ) {
 
 // All jQuery objects should point back to these
 // 所有jQuery 对象最后的指向应该都是回到 jQuery(document)
-// 此对象为document的jQuery对象，所有的jQuery对象最终都将指向它
-// 可以在chrome dev tools中观察prevObject
+// 此对象为 document 的 jQuery 对象，所有的 jQuery 对象最终都将指向它
+// 可以在chrome dev tools中观察 prevObject
 rootjQuery = jQuery(document);
 /*!
  * Sizzle CSS Selector Engine v1.10.2
@@ -10018,3 +10129,4 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
 }
 
 })( window );
+
