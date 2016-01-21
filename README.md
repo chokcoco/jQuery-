@@ -18,4 +18,6 @@ jQuery v1.10.2 源码解读
 
 
 # 工具类分析
+[jQuery API](https://oscarotero.com/jquery/)
+
 [jQuery source viewer](http://james.padolsey.com/jquery/)
