@@ -3391,36 +3391,60 @@ jQuery.Callbacks = function( options ) {
 		
 		// Fire callbacks
 		// 触发回调函数列表
-    // 这个函数是内部使用的辅助函数 
+    // 这个函数是内部使用的辅助函数，私有方法
     // 它被self.fire以及self.fireWith调用 
 		fire = function( data ) {
+			// 如果参数 memory 为true，则记录 data
+      // 如果是 memory 类型管理器
+      // 要记住 fire 的事件 data，以便下次 add 的时候可以重新 fire 这个事件
+      // 看 add 源码最后一段就知道
 			memory = options.memory && data;
 			fired = true;
 			firingIndex = firingStart || 0;
 			firingStart = 0;
 			firingLength = list.length;
+			// 开始 fire,表示正在 fire
 			firing = true;
+
+			// 遍历回调队列 list
 			for ( ; list && firingIndex < firingLength; firingIndex++ ) {
+				// data[ 0 ]是函数执行的上下文，也就是平时的this
+				// 这里看再看下 self.fireWith 传过来的参数 args 的格式 
+        // 如果是stopOnFalse管理器，并且回调返回值是false，中断！
+        // list[ firingIndex ].apply( data[ 0 ], data[ 1 ] ) 是最终的执行回调的方法
 				if ( list[ firingIndex ].apply( data[ 0 ], data[ 1 ] ) === false && options.stopOnFalse ) {
 					memory = false; // To prevent further calls using add
 					break;
 				}
 			}
+			// 结束 fire ，标记回调结束
 			firing = false;
+
 			if ( list ) {
 				if ( stack ) {
+					// 如果事件栈还不为空
+          // 不是 "once" 的情况
 					if ( stack.length ) {
+						// 从堆栈头部取出，递归fire
 						fire( stack.shift() );
+						// 这里是深度遍历，直到事件队列为空
 					}
+				// 深度遍历结束	
+				// 等到fire完所有的事件后
+        // 如果是memory类型管理器，下次还能继续
 				} else if ( memory ) {
+					// 清空队列
+          // "once memory" ，或者 "memory" 情况下 lock 过。
 					list = [];
 				} else {
+					// once
 					self.disable();
 				}
 			}
 		},
 		// Actual Callbacks object
 		// 实际的 callbacks 对象
+		// var callbacks = $.Callbacks() 最后返回的是 sele 对象
 		self = {
 			// Add a callback or a collection of callbacks to the list
 			// 向回调列表中添加一个回调或回调的集合。
@@ -3432,6 +3456,7 @@ jQuery.Callbacks = function( options ) {
 					// 首先，存储当前回调队列的长度
 					var start = list.length;
 					// 这里是一个立即执行函数，参数 add 是传入的参数
+					// 直接遍历传过来的 arguments 进行 push
 					(function add( args ) {
 						// 遍历这个 参数 集合
 						jQuery.each( args, function( _, arg ) {
@@ -3444,8 +3469,9 @@ jQuery.Callbacks = function( options ) {
 									// 将回调push入队列
 									list.push( arg );
 								}
-							// 如果传入的是回调的集合数组
-							// 因为可以同时add多个回调，arg = [fn1, fn2m , [fn3, fn4]]
+							// 如果传入的是回调的集合数组 或者 array-like
+							// 因为可以同时add多个回调
+							// 从这里可以看出add的传参可以有add(fn),add([fn1,fn2]),add(fn1,fn2)
 							// 同时这里排除掉type为string的情况，其实是提高效率，不加判断也能正确
 							} else if ( arg && arg.length && type !== "string" ) {
 								// Inspect recursively
@@ -3462,21 +3488,39 @@ jQuery.Callbacks = function( options ) {
 						firingLength = list.length;
 					// With memory, if we're not firing then
 					// we should call right away
+          // 如果已经 fire 过并且是 memory 类型的管理器
+          // memory 在这里是上一次 fire 的 [context, args]
 					} else if ( memory ) {
 						firingStart = start;
+						// memory 在上一次 fire 的时候被记录过了
+						// fire 的时候有这么一段
+						// memory = options.memory && data;
+						// memory 作用在这里，没有fire，一样有结果
 						fire( memory );
 					}
 				}
 				return this;
 			},
 			// Remove a callback from the list
+			// 从队列中移除一个或多个回调
 			remove: function() {
+				// 确保队列是存在的
 				if ( list ) {
+					// 遍历传入的参数（即是要移除的回调）
 					jQuery.each( arguments, function( _, arg ) {
 						var index;
+						// inArray(elem,arr,i) -- 在数组中查找指定值并返回它的索引（如果没有找到，则返回-1）
+						// elem 规定需检索的值, arr 数组, i 可选的整数参数
+						// 
 						while( ( index = jQuery.inArray( arg, list, index ) ) > -1 ) {
+							// splice(index,howmany) 方法向/从数组中添加/删除项目，然后返回被删除的项目
+							// index -- 必需。整数，规定添加/删除项目的位置
+							// howmany -- 必需。要删除的项目数量。如果设置为 0，则不会删除项目
+							// 从回调队列中移除当前查找到的这个方法
 							list.splice( index, 1 );
 							// Handle firing indexes
+              // 在函数列表处于firing状态时，最主要的就是维护firingLength和firgingIndex这两个值
+              // 保证fire时函数列表中的函数能够被正确执行（fire中的for循环需要这两个值
 							if ( firing ) {
 								if ( index <= firingLength ) {
 									firingLength--;
@@ -3492,25 +3536,31 @@ jQuery.Callbacks = function( options ) {
 			},
 			// Check if a given callback is in the list.
 			// If no argument is given, return whether or not list has callbacks attached.
+			// 查找一个给定的回调函数是否存在于回调列表中
 			has: function( fn ) {
 				return fn ? jQuery.inArray( fn, list ) > -1 : !!( list && list.length );
 			},
 			// Remove all callbacks from the list
+			// 清空回调列表
 			empty: function() {
 				list = [];
 				firingLength = 0;
 				return this;
 			},
 			// Have the list do nothing anymore
+			// 禁用回调列表中的回调
+			// 禁用掉之后，把里边的队列、栈等全部清空了！无法再恢复了
 			disable: function() {
 				list = stack = memory = undefined;
 				return this;
 			},
 			// Is it disabled?
+			// 列表是否被禁用
 			disabled: function() {
 				return !list;
 			},
 			// Lock the list in its current state
+			// 
 			lock: function() {
 				stack = undefined;
 				if ( !memory ) {
@@ -3523,24 +3573,37 @@ jQuery.Callbacks = function( options ) {
 				return !stack;
 			},
 			// Call all callbacks with the given context and arguments
+			// 以给定的上下文和参数调用所有回调函数
 			fireWith: function( context, args ) {
+				// list 不为空
+        // 并且没有 fire 过或者 stack 不为空
 				if ( list && ( !fired || stack ) ) {
 					args = args || [];
+					// 把args组织成 [context, [arg1, arg2, arg3, ...]]
+					// 可以看到第一个参数是上下文
 					args = [ context, args.slice ? args.slice() : args ];
+					// 如果当前还在firing
 					if ( firing ) {
+						// 将参数推入堆栈，等待当前回调结束再调用
 						stack.push( args );
 					} else {
+						// 否则直接调用
+						// 这里调用的 fire 是内部使用的 fire 方法，不是self.fire
 						fire( args );
 					}
 				}
 				return this;
 			},
 			// Call all the callbacks with the given arguments
+			// 以给定的参数调用所有回调函数
+			// 外观模式 self.fire –> self.fireWith –> fire
+			// 最终执行代码是内部私有的 fire 方法
 			fire: function() {
 				self.fireWith( this, arguments );
 				return this;
 			},
 			// To know if the callbacks have already been called at least once
+			// 回调函数列表是否至少被调用一次
 			fired: function() {
 				return !!fired;
 			}
@@ -10175,8 +10238,3 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
 }
 
 })( window );
-
-
-function fn(num){
-	console.log(num);
-}
