@@ -3305,9 +3305,13 @@ jQuery.contains = Sizzle.contains;
 
 })( window );
 // String to Object options format cache
+// 创建一个 options 缓存，用于 Callbacks 
 var optionsCache = {};
 
 // Convert String-formatted options into Object-formatted ones and store in cache
+// 生成一个 options 配置对象
+// 使用 optionsCache[ options ] 缓存住配置对象
+// 生成的配置对象就是{once:true, memory:true}
 function createOptions( options ) {
 	var object = optionsCache[ options ] = {};
 	jQuery.each( options.match( core_rnotwhite ) || [], function( _, flag ) {
@@ -3338,31 +3342,57 @@ function createOptions( options ) {
  *	stopOnFalse:	interrupt callings when a callback returns false
  *
  */
+// options 参数包含四个可选项，可用空格或者, 分隔，分别是
+// once 、 memory 、 unique 、stopOnFalse
+// once -- 确保这个回调列表只执行（ .fire() ）一次(像一个递延 Deferred)
+// memory -- 保持以前的值，将添加到这个列表的后面的最新的值立即执行调用任何回调 (像一个递延 Deferred)
+// unique -- 确保一次只能添加一个回调(所以在列表中没有重复的回调)
+// stopOnFalse -- 当一个回调返回 false 时中断调用
 jQuery.Callbacks = function( options ) {
 
 	// Convert options from String-formatted to Object-formatted if needed
 	// (we check in cache first)
+	// 通过字符串在optionsCache寻找有没有相应缓存，如果没有则创建一个，有则引用
 	options = typeof options === "string" ?
+		// 如果传递的是字符串
+		// 可以传递字符串："once memory"
+		// 这里还用optionsCache[ options ]缓存住配置对象
+  	// 生成的配置对象就是{once:true, memory:true}
 		( optionsCache[ options ] || createOptions( options ) ) :
+		// 如果传递的是对象
+		// 可以传递对象：{once:true, memory:true}
 		jQuery.extend( {}, options );
 
 	var // Flag to know if list is currently firing
+			// 列表中的函数是否正在回调中
 		firing,
 		// Last fire value (for non-forgettable lists)
+		// 最后一次触发回调时传的参数
 		memory,
 		// Flag to know if list was already fired
+		// 列表中的函数是否已经回调至少一次
 		fired,
 		// End of the loop when firing
+		// 需要 fire 的队列长度
 		firingLength,
 		// Index of currently firing callback (modified by remove if needed)
+		// 当前正在firing的回调在队列的索引
 		firingIndex,
 		// First callback to fire (used internally by add and fireWith)
+		// 回调的起点
 		firingStart,
 		// Actual callback list
+		// 回调函数列表
 		list = [],
 		// Stack of fire calls for repeatable lists
+		// 可重复的回调函数堆栈，用于控制触发回调时的参数列表
+		// 如果不是once的，那么stack会keep住fire所需的上下文跟参数（假设称为事件）
 		stack = !options.once && [],
+		
 		// Fire callbacks
+		// 触发回调函数列表
+    // 这个函数是内部使用的辅助函数 
+    // 它被self.fire以及self.fireWith调用 
 		fire = function( data ) {
 			memory = options.memory && data;
 			fired = true;
@@ -3390,27 +3420,44 @@ jQuery.Callbacks = function( options ) {
 			}
 		},
 		// Actual Callbacks object
+		// 实际的 callbacks 对象
 		self = {
 			// Add a callback or a collection of callbacks to the list
+			// 向回调列表中添加一个回调或回调的集合。
+			// 也就是实参可以是一个函数，或者一个函数数组
 			add: function() {
+				// 确保 list 是存在的
 				if ( list ) {
 					// First, we save the current length
+					// 首先，存储当前回调队列的长度
 					var start = list.length;
+					// 这里是一个立即执行函数，参数 add 是传入的参数
 					(function add( args ) {
+						// 遍历这个 参数 集合
 						jQuery.each( args, function( _, arg ) {
+							// 类型判断
 							var type = jQuery.type( arg );
+							// 如果传入的是单个方法
 							if ( type === "function" ) {
+								// 不是unique管理器或者当前队列还没有该回调
 								if ( !options.unique || !self.has( arg ) ) {
+									// 将回调push入队列
 									list.push( arg );
 								}
+							// 如果传入的是回调的集合数组
+							// 因为可以同时add多个回调，arg = [fn1, fn2m , [fn3, fn4]]
+							// 同时这里排除掉type为string的情况，其实是提高效率，不加判断也能正确
 							} else if ( arg && arg.length && type !== "string" ) {
 								// Inspect recursively
+								// 递归调用自己，注意这个使用技巧
+								// 如果是数组，以这个数组为参数再递归调用这个立即执行函数本身
 								add( arg );
 							}
 						});
 					})( arguments );
 					// Do we need to add the callbacks to the
 					// current firing batch?
+					// 如果当前在 firing 当中，那就把需要firing的长度设置成列表长度
 					if ( firing ) {
 						firingLength = list.length;
 					// With memory, if we're not firing then
@@ -3517,7 +3564,6 @@ jQuery.extend({
 				// resolved 对象立刻调用 done()方法指定的回调函数
 				// rejected 对应 已失败
 				// rejected 对象立刻调用 fail()方法指定的回调函数
-				// 
 				[ "resolve", "done", jQuery.Callbacks("once memory"), "resolved" ],
 				[ "reject", "fail", jQuery.Callbacks("once memory"), "rejected" ],
 				[ "notify", "progress", jQuery.Callbacks("memory") ]
