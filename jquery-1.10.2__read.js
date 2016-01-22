@@ -10130,3 +10130,7 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
 
 })( window );
 
+
+function fn(num){
+	console.log(num);
+}
