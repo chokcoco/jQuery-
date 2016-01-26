@@ -10,6 +10,9 @@
  * http://jquery.org/license
  *
  * Date: 2013-07-03T13:48Z
+ *
+ * 中文注释：Coco
+ *
  */
 
 // 用一个函数域包起来，就是所谓的沙箱
@@ -24,12 +27,12 @@
 		// Support: Firefox 18+
 		//"use strict";
 		var
-		// The deferred used on DOM ready
-		// 一个用在 DOMready 上的延时回调函数处理变量
+			// The deferred used on DOM ready
+			// 一个用在 DOM ready 上的回调函数处理变量
 			readyList,
 
 			// A central reference to the root jQuery(document)
-			// 所有jQuery 对象最后的指向应该都是回到 jQuery(document)
+			// 所有 jQuery 对象最后的指向应该都是回到 jQuery(document)
 			rootjQuery,
 
 			// Support: IE<10
@@ -47,7 +50,7 @@
 			_jQuery = window.jQuery,
 
 			// Map over the $ in case of overwrite
-			// 设置别名，防止被污染
+			// 设置别名
 			_$ = window.$,
 
 			// [[Class]] -> type pairs
@@ -10331,5 +10334,4 @@
 					});
 				}
 			}
-
 		})(window);
