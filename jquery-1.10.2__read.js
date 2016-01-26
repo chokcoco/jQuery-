@@ -1217,7 +1217,8 @@
 							return ret;
 						}
 				});
-
+			
+			// 
 			jQuery.ready.promise = function(obj) {
 				if (!readyList) {
 
@@ -1303,6 +1304,7 @@
 				class2type["[object " + name + "]"] = name.toLowerCase();
 			});
 
+			// 返回对象是否是类数组对象
 			function isArraylike(obj) {
 				var length = obj.length,
 					type = jQuery.type(obj);
