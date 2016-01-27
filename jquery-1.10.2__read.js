@@ -1200,6 +1200,7 @@
 						// A method for quickly swapping in/out CSS properties to get correct calculations.
 						// Note: this method belongs to the css module but it's needed here for the support module.
 						// If support gets modularized, this method should be moved back to the css module.
+						// 此方法是属于 css 模块
 						swap: function(elem, options, callback, args) {
 							var ret, name,
 								old = {};
@@ -1213,6 +1214,7 @@
 							ret = callback.apply(elem, args || []);
 
 							// Revert the old values
+							// 还原旧数据
 							for (name in options) {
 								elem.style[name] = old[name];
 							}
@@ -1297,9 +1299,9 @@
 				// 函数返回的是deferred对象，这就可以加上链式操作了
 				// 可以使用 .done .fail 等方法
 				return readyList.promise(obj);
-			};
 
 			// Populate the class2type map
+			};
 			// typeof并不能区分出它是Array类型，jQuery为了扩展typeof的表达力，因此扩展了type方法
 			// 针对一些特殊的对象（例如null，window，RegExp）也进行精准的类型判断
 			// 判断类型前，将常见类型打表，先存于一个 Hash 表 class2type 里边
