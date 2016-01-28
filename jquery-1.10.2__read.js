@@ -95,6 +95,7 @@
 				// 通过原型传递解决问题，把 jQuery 的原型传递给jQuery.prototype.init.prototype
 				// jQuery.fn.init.prototype = jQuery.fn;
 				// 所以通过这个方法生成的实例 this 所指向的 仍然是 jQuery.fn(jQuery.prototype)，所以能正确访问 jQuery 类原型上的属性与方法
+				// http://rapheal.sinaapp.com/2013/01/31/jquery-src-obj/
 				return new jQuery.fn.init(selector, context, rootjQuery);
 			},
 
@@ -105,7 +106,7 @@
 			core_rnotwhite = /\S+/g,
 
 			// Make sure we trim BOM and NBSP (here's looking at you, Safari 5.0 and IE)
-			// 确保去除 BOM 和 $nbsp; 
+			// 匹配头尾空格，确保去除 BOM 和 $nbsp; 
 			// | 分割的两部分是一样，分别匹配头尾的空格
 			// 最快的trim方法请看：http://www.cnblogs.com/rubylouvre/archive/2009/09/18/1568794.html
 			rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
@@ -325,9 +326,10 @@
 
 			// The default length of a jQuery object is 0
 			// jQuery 对象的默认长度为 0 
+			// jQuery 对象里边选取的DOM节点数目，有了这个属性就已经像“半个”数组了，:)
 			length: 0,
 
-			// 转换为数组
+			// 将 jQuery 对象转换成数组类型，这里返回的结果就真的是Array类型了
 			// 相当于 Array.prototype.slice.call(this)
 			// slice() 方法：https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
 			toArray: function() {
@@ -336,8 +338,9 @@
 
 			// Get the Nth element in the matched element set OR
 			// Get the whole matched element set as a clean array
-			// 如果 num 不为0 ，将返回一个选择器数组
-			// （否则）返回 index 为 num 的 jQuery 对象
+			// 如果 num 不为 null ，将返回索引为 num 的元素
+			// （否则）返回索引为 num 的 jQuery 对象
+			// 当 num 为负数的时候，相当于从数组尾巴倒数索引
 			get: function(num) {
 				return num == null ?
 
@@ -423,6 +426,10 @@
 			},
 
 			// 回溯链式调用的上一个对象
+      // $("#id").find('.clr').html('.clr HTML').end().html('#id HTML')
+      // 本来 find 函数已经使得链的上下文切换到 .clr 这个 jQ 对象了，为了最后能回到 #id 这个 jQ 对象
+      // 可以使用 end 方法来返回
+      // 这里的秘籍就是每个对象里边的 prevObject 保存着链中的上一个 jQ 对象
 			end: function() {
 				return this.prevObject || this.constructor(null);
 			},
@@ -2248,6 +2255,7 @@
 					return ret;
 				};
 
+				// 
 				Expr = Sizzle.selectors = {
 
 					// Can be adjusted by the user
@@ -2278,6 +2286,7 @@
 						}
 					},
 
+					// 预处理
 					preFilter: {
 						"ATTR": function(match) {
 							match[1] = match[1].replace(runescape, funescape);
@@ -2750,57 +2759,91 @@
 				setFilters.prototype = Expr.filters = Expr.pseudos;
 				Expr.setFilters = new setFilters();
 
+				// 词法分析，返回的是一个Token序列
+				// Sizzle的Token格式如下 ：{value:'匹配到的字符串', type:'对应的Token类型', matches:'正则匹配到的一个结构'}
+				// //假设传入进来的选择器是：div > p + .clr[type="checkbox"], #id:first-child
 				function tokenize(selector, parseOnly) {
+					// soFar 是表示目前还未分析的字符串剩余部分
+					// groups 表示目前已经匹配到的规则组，
+					// 在这个例子里边，groups的长度最后是2（传进来的选择器以逗号,分隔）
+					// 存放的是每个规则对应的Token序列
 					var matched, match, tokens, type,
 						soFar, groups, preFilters,
 						cached = tokenCache[selector + " "];
 
+					// 如果cache里边有，直接拿出来即可	
 					if (cached) {
 						return parseOnly ? 0 : cached.slice(0);
 					}
 
+					// 初始化
 					soFar = selector;
 					groups = [];
+					// 这里的预处理器为了对匹配到的 Token 适当做一些调整
+  				// 其实就是正则匹配到的内容的一个预处理 
 					preFilters = Expr.preFilter;
 
+					// 当字符串还没解析完毕，循环开始
 					while (soFar) {
 
 						// Comma and first run
+						// 如果匹配到逗号，用逗号,分组
+						// whitespace = "[\\x20\\t\\r\\n\\f]",
+						// rcomma = new RegExp("^" + whitespace + "*," + whitespace + "*")
 						if (!matched || (match = rcomma.exec(soFar))) {
 							if (match) {
 								// Don't consume trailing commas as valid
 								soFar = soFar.slice(match[0].length) || soFar;
 							}
+							// 往规则组里边压入一个Token序列，目前Token序列还是空的
 							groups.push(tokens = []);
 						}
 
 						matched = false;
 
 						// Combinators
+						// 先处理这几个特殊的Token ： >, +, 空格, ~
+    				// 因为他们比较简单，并且是单字符的
+    				// rcombinators = new RegExp("^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*"),
 						if ((match = rcombinators.exec(soFar))) {
+							// 获取到匹配的字符
 							matched = match.shift();
+
+							// 放入Token序列中
 							tokens.push({
 								value: matched,
 								// Cast descendant combinators to space
+								// rtrim 匹配头尾空格，这里是去掉头尾的空格
 								type: match[0].replace(rtrim, " ")
 							});
+							// 剩余还未分析的字符串需要减去这段已经分析过的
 							soFar = soFar.slice(matched.length);
 						}
 
 						// Filters
+						// 这里开始分析这几种Token ： TAG, ID, CLASS, ATTR, CHILD, PSEUDO, NAME
+    				// Expr.filter里边对应地 就有这些key
 						for (type in Expr.filter) {
+				      // 如果通过正则匹配到了Token格式：match = matchExpr[ type ].exec( soFar )
+      				// 然后看看需不需要预处理：!preFilters[ type ]
+          		// 如果需要 ，那么通过预处理器将匹配到的处理一下 ： match = preFilters[ type ]( match )			
 							if ((match = matchExpr[type].exec(soFar)) && (!preFilters[type] ||
 									(match = preFilters[type](match)))) {
 								matched = match.shift();
+								// 放入Token序列中
 								tokens.push({
 									value: matched,
 									type: type,
 									matches: match
 								});
+								// 剩余还未分析的字符串需要减去这段已经分析过的
 								soFar = soFar.slice(matched.length);
 							}
 						}
 
+				    // 如果到了这里都还没matched到，那么说明这个选择器在这里有错误
+				    // 直接中断词法分析过程
+				    // 这就是Sizzle对词法分析的异常处理
 						if (!matched) {
 							break;
 						}
@@ -2809,6 +2852,8 @@
 					// Return the length of the invalid excess
 					// if we're just parsing
 					// Otherwise, throw an error or return tokens
+					// 如果只需要这个接口检查选择器的合法性，直接就返回 soFar 的剩余长度，倘若是大于零，说明选择器不合法
+  				// 其余情况，如果 soFar 长度大于零，抛出异常；否则把 groups 记录在 cache 里边并返回，
 					return parseOnly ?
 						soFar.length :
 						soFar ?
