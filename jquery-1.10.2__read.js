@@ -1456,6 +1456,7 @@
 
 					// 兄弟关系[+~]
 					rsibling = new RegExp(whitespace + "*[+~]"),
+					// 属性等号 [type = xxx] 中间的 =
 					rattributeQuotes = new RegExp("=" + whitespace + "*([^\\]'\"]*)" + whitespace + "*\\]", "g"),
 
 					rpseudo = new RegExp(pseudos),
