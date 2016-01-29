@@ -1432,6 +1432,7 @@
 					identifier = characterEncoding.replace("w", "w#"),
 
 					// Acceptable operators http://www.w3.org/TR/selectors/#attribute-selectors
+					// 属性
 					attributes = "\\[" + whitespace + "*(" + characterEncoding + ")" + whitespace +
 					"*(?:([*^$|!~]?=)" + whitespace + "*(?:(['\"])((?:\\\\.|[^\\\\])*?)\\3|(" + identifier + ")|)|)" + whitespace + "*\\]",
 
@@ -1441,14 +1442,19 @@
 					//   then anything else
 					// These preferences are here to reduce the number of selectors
 					//   needing tokenize in the PSEUDO preFilter
+					// 伪类
 					pseudos = ":(" + characterEncoding + ")(?:\\(((['\"])((?:\\\\.|[^\\\\])*?)\\3|((?:\\\\.|[^\\\\()[\\]]|" + attributes.replace(3, 8) + ")*)|.*)\\)|)",
 
 					// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
+					// 前后空格
 					rtrim = new RegExp("^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g"),
 
+					// 逗号
 					rcomma = new RegExp("^" + whitespace + "*," + whitespace + "*"),
+					// 连接符 [>+~]
 					rcombinators = new RegExp("^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*"),
 
+					// 兄弟关系[+~]
 					rsibling = new RegExp(whitespace + "*[+~]"),
 					rattributeQuotes = new RegExp("=" + whitespace + "*([^\\]'\"]*)" + whitespace + "*\\]", "g"),
 
