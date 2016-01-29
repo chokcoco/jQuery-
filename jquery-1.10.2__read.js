@@ -1414,10 +1414,16 @@
 					booleans = "checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|loop|multiple|open|readonly|required|scoped",
 
 					// Regular expressions
+					// 下面是一些正则表达式
 
 					// Whitespace characters http://www.w3.org/TR/css3-selectors/#whitespace
+					// 空白符正则
+					// \t 制表符；\r 回车；\n 换行；\f 换页；
+					// \xnn 由十六进制数nn指定的拉丁字符 -->  \uxxxx 由十六进制数xxxx指定的Unicode字符,
+					// \x20 化为二进制数为 0010 0000 ,对照表格  http://ascii.911cha.com/ ，表示空格
 					whitespace = "[\\x20\\t\\r\\n\\f]",
 					// http://www.w3.org/TR/css3-syntax/#characters
+					// 匹配符合 css 命名的字符串
 					characterEncoding = "(?:\\\\.|[\\w-]|[^\\x00-\\xa0])+",
 
 					// Loosely modeled on CSS identifier characters
@@ -1449,6 +1455,7 @@
 					rpseudo = new RegExp(pseudos),
 					ridentifier = new RegExp("^" + identifier + "$"),
 
+					// 存储了一些匹配正则的数组
 					matchExpr = {
 						"ID": new RegExp("^#(" + characterEncoding + ")"),
 						"CLASS": new RegExp("^\\.(" + characterEncoding + ")"),
@@ -2760,8 +2767,8 @@
 				Expr.setFilters = new setFilters();
 
 				// 词法分析，返回的是一个Token序列
-				// Sizzle的Token格式如下 ：{value:'匹配到的字符串', type:'对应的Token类型', matches:'正则匹配到的一个结构'}
-				// //假设传入进来的选择器是：div > p + .clr[type="checkbox"], #id:first-child
+				// Sizzle的 Token 格式如下 ：{value:'匹配到的字符串', type:'对应的Token类型', matches:'正则匹配到的一个结构'}
+				// 假设传入进来的选择器是：div > p + .clr[type="checkbox"], #id:first-child
 				function tokenize(selector, parseOnly) {
 					// soFar 是表示目前还未分析的字符串剩余部分
 					// groups 表示目前已经匹配到的规则组，
@@ -2824,7 +2831,7 @@
 						// 这里开始分析这几种Token ： TAG, ID, CLASS, ATTR, CHILD, PSEUDO, NAME
     				// Expr.filter里边对应地 就有这些key
 						for (type in Expr.filter) {
-				      // 如果通过正则匹配到了Token格式：match = matchExpr[ type ].exec( soFar )
+				      // 如果通过正则匹配到了 Token 格式：match = matchExpr[ type ].exec( soFar )
       				// 然后看看需不需要预处理：!preFilters[ type ]
           		// 如果需要 ，那么通过预处理器将匹配到的处理一下 ： match = preFilters[ type ]( match )			
 							if ((match = matchExpr[type].exec(soFar)) && (!preFilters[type] ||
@@ -3245,28 +3252,46 @@
 					return results;
 				}
 
+				// Sizzle 引擎的主要入口函数
 				function select(selector, context, results, seed) {
 					var i, tokens, token, type, find,
+						// tokenize 解析出词法格式
+						// tokenize 返回的是一个 Token 序列
 						match = tokenize(selector);
 
+					// 如果外界没有指定初始集合 seed 	
 					if (!seed) {
 						// Try to minimize operations if there is only one group
+						// 如果只有一组，就是在单个选择器的情况
+						// 可以有一些便捷的处理方式
 						if (match.length === 1) {
 
 							// Take a shortcut and set the context if the root selector is an ID
+				
+							// 取出选择器 Token 序列
 							tokens = match[0] = match[0].slice(0);
+
+							// 这么一大串其实简单来说是 
+							// 如果是 id 选择器 可以设置上下文 context 进行快速查找
 							if (tokens.length > 2 && (token = tokens[0]).type === "ID" &&
 								support.getById && context.nodeType === 9 && documentIsHTML &&
 								Expr.relative[tokens[1].type]) {
 
 								context = (Expr.find["ID"](token.matches[0].replace(runescape, funescape), context) || [])[0];
+								
+								// 如果 context 为空，即是
+								// 如果context这个元素（ selector 第一个 id 选择器）都不存在就不用查找
 								if (!context) {
 									return results;
 								}
+								// 去掉第一个id选择器
 								selector = selector.slice(tokens.shift().value.length);
 							}
 
 							// Fetch a seed set for right-to-left matching
+							// 从右至左匹配，找出一个 seed 集合
+							// 其中： "needsContext"= new RegExp( "^" + whitespace + "*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" + whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" )
+							// 即是表示如果没有一些结构伪类，这些是需要用另一种方式过滤，在之后文章再详细剖析
 							i = matchExpr["needsContext"].test(selector) ? 0 : tokens.length;
 							while (i--) {
 								token = tokens[i];
