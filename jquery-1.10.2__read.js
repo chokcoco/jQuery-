@@ -856,7 +856,7 @@
 						// 现在是在IE跟旧版本的Chrome是支持此方法的，新版浏览器没有 window.execScript 这个API
 						(window.execScript || function(data) {
 							// 这里为何不能直接：eval.call( window, data );
-							// 在chrome一些旧版本里eval.call( window, data )无效 
+							// 在 chrome 一些旧版本里eval.call( window, data )无效 
 							window["eval"].call(window, data);
 						})(data);
 					}
