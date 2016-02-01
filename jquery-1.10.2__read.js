@@ -1414,7 +1414,7 @@
 					booleans = "checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|loop|multiple|open|readonly|required|scoped",
 
 					// Regular expressions
-					// 下面是一些正则表达式
+					// 下面是一些正则表达式（或正则表达式片段）
 
 					// Whitespace characters http://www.w3.org/TR/css3-selectors/#whitespace
 					// 空白符正则
@@ -1423,12 +1423,14 @@
 					// \x20 化为二进制数为 0010 0000 ,对照表格  http://ascii.911cha.com/ ，表示空格
 					whitespace = "[\\x20\\t\\r\\n\\f]",
 					// http://www.w3.org/TR/css3-syntax/#characters
+					// 一段正则规则（这里并非完整的正则表达式，只是一段）
 					// 匹配符合 css 命名的字符串
 					characterEncoding = "(?:\\\\.|[\\w-]|[^\\x00-\\xa0])+",
 
 					// Loosely modeled on CSS identifier characters
 					// An unquoted value should be a CSS identifier http://www.w3.org/TR/css3-selectors/#attribute-selectors
 					// Proper syntax: http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
+					// identifier = "(?:\\.|[\w#-]|[^\x00-\xa0])+"
 					identifier = characterEncoding.replace("w", "w#"),
 
 					// Acceptable operators http://www.w3.org/TR/selectors/#attribute-selectors
@@ -1456,13 +1458,17 @@
 
 					// 兄弟关系[+~]
 					rsibling = new RegExp(whitespace + "*[+~]"),
-					// 属性等号 [type = xxx] 中间的 =
+					// rattributeQuotes = new RegExp("=[\\x20\\t\\r\\n\\f]*([^\\]'\"]*)[\\x20\\t\\r\\n\\f]*\\]","g")
+					// 匹配属性等号 [type = xxx] =之后的 = xxx] 
 					rattributeQuotes = new RegExp("=" + whitespace + "*([^\\]'\"]*)" + whitespace + "*\\]", "g"),
 
+					// 伪类
 					rpseudo = new RegExp(pseudos),
+
+					// id选择器
 					ridentifier = new RegExp("^" + identifier + "$"),
 
-					// 存储了一些匹配正则的数组
+					// 存储了匹配各类选择器的数组
 					matchExpr = {
 						"ID": new RegExp("^#(" + characterEncoding + ")"),
 						"CLASS": new RegExp("^\\.(" + characterEncoding + ")"),
@@ -1479,14 +1485,21 @@
 							whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i")
 					},
 
+					// 检测浏览器是否支持诸如 document.getElementById 、document.getElementByClassName 等方法
 					rnative = /^[^{]+\{\s*\[native \w/,
 
 					// Easily-parseable/retrievable ID or TAG or CLASS selectors
+					// 便捷的匹配 id tag 或者 class 选择器
 					rquickExpr = /^(?:#([\w-]+)|(\w+)|\.([\w-]+))$/,
 
+					// 匹配input类型 ：
+					// input select textarea button
 					rinputs = /^(?:input|select|textarea|button)$/i,
+					
+					// 匹配 h1 ~ h6 标签
 					rheader = /^h\d$/i,
 
+					// 匹配 ' 和 \ 
 					rescape = /'|\\/g,
 
 					// CSS escapes http://www.w3.org/TR/CSS21/syndata.html#escaped-characters
@@ -1506,6 +1519,7 @@
 					};
 
 				// Optimize for push.apply( _, NodeList )
+				// 对 push.apply( _, NodeList ) 进行优化
 				try {
 					push.apply(
 						(arr = slice.call(preferredDoc.childNodes)),
@@ -1535,33 +1549,60 @@
 					};
 				}
 
+				// Sizzle 引擎的入口函数
+				// 选择器入口，jQuery的构造函数要处理6大类情况
+				// 但是只有在处理选择器表达式(selector expression)时才会调用Sizzle选择器引擎。
+				// @param selector 已去掉头尾空白的选择器字符串 
+				// @param context 执行匹配的最初的上下文（即DOM元素集合）。若context没有赋值，则取document。 
+				// @param results 已匹配出的部分最终结果。若results没有赋值，则赋予空数组。 
+				// @param seed 初始集合 
 				function Sizzle(selector, context, results, seed) {
 					var match, elem, m, nodeType,
 						// QSA vars
+						// QSA 表示 querySelectorAll
 						i, groups, old, nid, newContext, newSelector;
 
 					if ((context ? context.ownerDocument || context : preferredDoc) !== document) {
+						// 根据不同的浏览器环境,设置合适的Expr方法,构造合适的rbuggy测试
 						setDocument(context);
 					}
 
+					// 参数解析部分已说明
 					context = context || document;
 					results = results || [];
 
+					// 如果选择器字符串为空，返回 results 
+					// results 可能是已匹配出的部分最终结果，也可能是空数组
 					if (!selector || typeof selector !== "string") {
 						return results;
 					}
 
+					// nodeType 属性返回被选节点的节点类型
+					// 1 -- Element
+					// 9 -- Document
+					// 如果上下文传入错误，返回空数组
 					if ((nodeType = context.nodeType) !== 1 && nodeType !== 9) {
 						return [];
 					}
 
+					// 不存在 seed 集合
+					// seed - 种子合集（搜索器搜到符合条件的标签）
 					if (documentIsHTML && !seed) {
 
 						// Shortcuts
+						// 便捷的匹配 id tag 或者 class 选择器
+						// rquickExpr = /^(?:#([\w-]+)|(\w+)|\.([\w-]+))$/
 						if ((match = rquickExpr.exec(selector))) {
 							// Speed-up: Sizzle("#ID")
+							// selector会匹配 #[id] | [tag] | .[class] 其中之一
+          		// match[1] 的值是元素是与 rquickExpr 的第 1 个子表达式相匹配的文本，
+          		// 在这里 match[1] 就是匹配到的 id 选择器的名字（如果有）
+          		// 如果匹配到 id 选择器 #xx 
 							if ((m = match[1])) {
+								// 9 -- Document
+								// 如果上下文是 document
 								if (nodeType === 9) {
+									// 利用原生方法 document.getElementById 匹配到的 elem
 									elem = context.getElementById(m);
 									// Check parentNode to catch when Blackberry 4.6 returns
 									// nodes that are no longer in the document #6963
@@ -1573,10 +1614,12 @@
 											return results;
 										}
 									} else {
+										// 返回结果
 										return results;
 									}
 								} else {
 									// Context is not a document
+									// 上下文不是 document
 									if (context.ownerDocument && (elem = context.ownerDocument.getElementById(m)) &&
 										contains(context, elem) && elem.id === m) {
 										results.push(elem);
@@ -1585,11 +1628,18 @@
 								}
 
 								// Speed-up: Sizzle("TAG")
+								// 在这里 match[2] 就是匹配到的 tag 选择器的名字（如果有）
+								// 如果匹配到 tag 选择器 诸如div p 等 
 							} else if (match[2]) {
+								// 利用原生方法 getElementsByTagName 找到元素
 								push.apply(results, context.getElementsByTagName(selector));
 								return results;
 
 								// Speed-up: Sizzle(".CLASS")
+								// 在这里 match[3] 就是匹配到的 class 选择器的名字（如果有）
+								// 如果匹配到 class 选择器 .xxx
+								// 并且 
+								// support.getElementsByClassName 为 true 表示浏览器支持 getElementsByClassName 这个方法
 							} else if ((m = match[3]) && support.getElementsByClassName && context.getElementsByClassName) {
 								push.apply(results, context.getElementsByClassName(m));
 								return results;
@@ -1597,6 +1647,11 @@
 						}
 
 						// QSA path
+						// QSA 表示 querySelectorAll，原生的QSA运行速度非常快,因此尽可能使用 QSA 来对 CSS 选择器进行查询
+            // querySelectorAll是原生的选择器,但不支持老的浏览器版本, 主要是 IE8 及以前的浏览器
+            // rbuggyQSA 保存了用于解决一些浏览器兼容问题的 bug 修补的正则表达式
+            // QSA 在不同浏览器上运行的效果有差异，表现得非常奇怪，因此对某些 selector 不能用 QSA
+            // 为了适应不同的浏览器，就需要首先进行浏览器兼容性测试，然后确定测试正则表达式,用 rbuggyQSA 来确定 selector 是否能用 QSA
 						if (support.qsa && (!rbuggyQSA || !rbuggyQSA.test(selector))) {
 							nid = old = expando;
 							newContext = context;
@@ -1792,6 +1847,7 @@
 				};
 
 				// Expose support vars for convenience
+				// 暴露 support 变量
 				support = Sizzle.support = {};
 
 				/**
@@ -1839,6 +1895,7 @@
 					---------------------------------------------------------------------- */
 
 					// Check if getElementsByTagName("*") returns only elements
+					// 检查 getElementsByTagName 浏览器是否支持
 					support.getElementsByTagName = assert(function(div) {
 						div.appendChild(doc.createComment(""));
 						return !div.getElementsByTagName("*").length;
@@ -1866,6 +1923,7 @@
 					});
 
 					// ID find and filter
+					// 定义 id 选择器的实现方法 Expr.find["ID"] 以及过滤方法 Expr.filter["ID"]
 					if (support.getById) {
 						Expr.find["ID"] = function(id, context) {
 							if (typeof context.getElementById !== strundefined && documentIsHTML) {
@@ -1884,6 +1942,7 @@
 					} else {
 						// Support: IE6/7
 						// getElementById is not reliable as a find shortcut
+						// 兼容ie6 7
 						delete Expr.find["ID"];
 
 						Expr.filter["ID"] = function(id) {
@@ -1896,6 +1955,7 @@
 					}
 
 					// Tag
+					// 定义 Tag 选择器的实现方法
 					Expr.find["TAG"] = support.getElementsByTagName ?
 						function(tag, context) {
 							if (typeof context.getElementsByTagName !== strundefined) {
@@ -1922,6 +1982,7 @@
 						};
 
 					// Class
+					// 定义 Class 选择器的实现方法
 					Expr.find["CLASS"] = support.getElementsByClassName && function(className, context) {
 						if (typeof context.getElementsByClassName !== strundefined && documentIsHTML) {
 							return context.getElementsByClassName(className);
@@ -1929,6 +1990,7 @@
 					};
 
 					/* QSA/matchesSelector
+						 QSA -- querySelectorAll
 					---------------------------------------------------------------------- */
 
 					// QSA and matchesSelector support
@@ -2269,7 +2331,7 @@
 					return ret;
 				};
 
-				// 
+				// 记录跟选择器相关的属性以及操作
 				Expr = Sizzle.selectors = {
 
 					// Can be adjusted by the user
@@ -2283,6 +2345,12 @@
 
 					find: {},
 
+					// relative 用来表示节点间的关系，一个节点跟另一个节点有以下几种关系
+					// 父亲和儿子，用 > 表达
+					// 祖宗和后代 ，用 （空格） 表达 
+					// 临近兄弟，用 + 表达
+					// 普通兄弟，用 ~ 表达
+					// first属性，用来标识两个节点的“紧密”程度,例如父子关系和临近兄弟关系就是紧密的
 					relative: {
 						">": {
 							dir: "parentNode",
@@ -3260,6 +3328,9 @@
 				}
 
 				// Sizzle 引擎的主要入口函数
+				// Expr.find: 主查找函数
+				// Expr.filter: 主过滤函数
+				// Expr.relative: 块间关系处理函数集
 				function select(selector, context, results, seed) {
 					var i, tokens, token, type, find,
 						// tokenize 解析出词法格式
@@ -3274,20 +3345,22 @@
 						if (match.length === 1) {
 
 							// Take a shortcut and set the context if the root selector is an ID
-				
 							// 取出选择器 Token 序列
 							tokens = match[0] = match[0].slice(0);
 
 							// 这么一大串其实简单来说是 
-							// 如果是 id 选择器 可以设置上下文 context 进行快速查找
+							// 其实 Sizzle 不完全是采用从右到左，如果选择器表达式的最左边存在 #id 选择器
+							// 就会首先对最左边进行查询，并将其作为下一步的执行上下文，
+							// 最终达到缩小上下文的目的，考虑的相当全面
 							if (tokens.length > 2 && (token = tokens[0]).type === "ID" &&
 								support.getById && context.nodeType === 9 && documentIsHTML &&
 								Expr.relative[tokens[1].type]) {
 
+							  // 如果是 id 选择器，那么以 #id 作为新的上下文
 								context = (Expr.find["ID"](token.matches[0].replace(runescape, funescape), context) || [])[0];
 								
-								// 如果 context 为空，即是
-								// 如果context这个元素（ selector 第一个 id 选择器）都不存在就不用查找
+								// 如果 context 为空，说明新的上下文没找到
+								// 如果 context 这个元素（ selector 第一个 id 选择器）都不存在就不用继续查找
 								if (!context) {
 									return results;
 								}
@@ -3298,30 +3371,49 @@
 							// Fetch a seed set for right-to-left matching
 							// 从右至左匹配，找出一个 seed 集合
 							// 其中： "needsContext"= new RegExp( "^" + whitespace + "*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" + whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" )
-							// 即是表示如果没有一些结构伪类，这些是需要用另一种方式过滤，在之后文章再详细剖析
+							// 即是表示如果没有一些结构伪类，这些是需要用另一种方式过滤
 							i = matchExpr["needsContext"].test(selector) ? 0 : tokens.length;
+							
+							// 从右向左边查询
 							while (i--) {
 								token = tokens[i];
 
 								// Abort if we hit a combinator
+								// 如果遇到了关系选择器中止
+                //
+                //  > + ~ 空
 								if (Expr.relative[(type = token.type)]) {
 									break;
 								}
+
+								// 先看看有没有搜索器find，搜索器就是浏览器一些原生的取DOM接口，简单的表述就是以下对象了
+                //  Expr.find = {
+                //    'ID'    : context.getElementById,
+                //    'CLASS' : context.getElementsByClassName,
+                //    'NAME'  : context.getElementsByName,
+                //    'TAG'   : context.getElementsByTagName
+                //  }
 								if ((find = Expr.find[type])) {
 									// Search, expanding context for leading sibling combinators
+									// 尝试一下能否通过这个搜索器搜到符合条件的初始集合seed
 									if ((seed = find(
 											token.matches[0].replace(runescape, funescape),
 											rsibling.test(tokens[0].type) && context.parentNode || context
 										))) {
 
 										// If seed is empty or no tokens remain, we can return early
+										// 如果真的搜到了,把最后一条规则去除掉
 										tokens.splice(i, 1);
 										selector = seed.length && toSelector(tokens);
+
+										// 看看当前剩余的选择器是否为空
 										if (!selector) {
+											// 是的话，提前返回结果了
 											push.apply(results, seed);
 											return results;
 										}
 
+										// 已经找到了符合条件的seed集合，此时前边还有其他规则，跳出去
 										break;
 									}
 								}
@@ -3331,12 +3423,19 @@
 
 					// Compile and execute a filtering function
 					// Provide `match` to avoid retokenization if we modified the selector above
+					// 交由 compile 来生成一个称为终极匹配器
+					// 通过这个匹配器过滤 seed ，把符合条件的结果放到 results 里边
+					// 生成编译函数 
+					// var superMatcher = compile( selector, match )
+					// 执行 
+					// superMatcher(seed,context,!documentIsHTML,results,rsibling.test( selector ))
 					compile(selector, match)(
 						seed,
 						context, !documentIsHTML,
 						results,
 						rsibling.test(selector)
 					);
+					// 返回结果
 					return results;
 				}
 
@@ -3402,6 +3501,7 @@
 					});
 				}
 
+				// 暴露接口
 				jQuery.find = Sizzle;
 				jQuery.expr = Sizzle.selectors;
 				jQuery.expr[":"] = jQuery.expr.pseudos;
