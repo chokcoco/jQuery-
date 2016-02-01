@@ -23,3 +23,6 @@ jQuery v1.10.2 源码解读
 [jQuery API](https://oscarotero.com/jquery/)
 
 [jQuery source viewer](http://james.padolsey.com/jquery/)
+
+# 分模块解析
+[jQuery里面的选择器引擎：Sizzle介绍](http://www.cnblogs.com/bigbrother1984/p/4010492.html)
