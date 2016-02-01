@@ -1663,9 +1663,14 @@
 							// We can work around this by specifying an extra ID on the root
 							// and working up from there (Thanks to Andrew Dupont for the technique)
 							// IE 8 doesn't work on object elements
+              // QSA 在以某个根节点ID为基础的查找中(.rootClass span)表现很奇怪，
+              // 它会忽略某些selector选项，返回不合适的结果
+              // 一个比较通常的解决方法是为根节点设置一个额外的id，并以此开始查询
 							if (nodeType === 1 && context.nodeName.toLowerCase() !== "object") {
+								// 调用词法分析器分析选择器，得到一个 Token 序列
 								groups = tokenize(selector);
 
+								// 保存并设置新id
 								if ((old = context.getAttribute("id"))) {
 									nid = old.replace(rescape, "\\$&");
 								} else {
@@ -1673,21 +1678,28 @@
 								}
 								nid = "[id='" + nid + "'] ";
 
+								// 把新的id添加到 Token 序列里
 								i = groups.length;
+
 								while (i--) {
 									groups[i] = nid + toSelector(groups[i]);
 								}
+								// 构造新的上下文
 								newContext = rsibling.test(selector) && context.parentNode || context;
+								// 构造新的选择器
 								newSelector = groups.join(",");
 							}
 
+							// 使用新的选择器通过QSA来查询元素
 							if (newSelector) {
 								try {
+									// 将查询结果合并到results上
 									push.apply(results,
 										newContext.querySelectorAll(newSelector)
 									);
 									return results;
 								} catch (qsaError) {} finally {
+									// 如果没有旧 id ,则移除
 									if (!old) {
 										context.removeAttribute("id");
 									}
@@ -1697,6 +1709,8 @@
 					}
 
 					// All others
+					// 到这里仍没有返回结果，表明这些 selector 无法直接使用原生的 document 查询方法
+					// 调用 select 方法
 					return select(selector.replace(rtrim, "$1"), context, results, seed);
 				}
 
@@ -1706,6 +1720,7 @@
 				 *	property name the (space-suffixed) string and (if the cache is larger than Expr.cacheLength)
 				 *	deleting the oldest entry
 				 */
+				
 				function createCache() {
 					var keys = [];
 
@@ -1733,19 +1748,27 @@
 				 * Support testing using an element
 				 * @param {Function} fn Passed the created div and expects a boolean result
 				 */
+				// 使用 assert(function(div){}) 函数进程浏览器 bug 测试
+				// assert 函数建立一个 div 节点，将这个 div 节点传递给回调函数
+				// div 节点在 assert 函数结束时会被删除，此时注意要删除由回调函数创建的子节点，并将 div 赋值 null 以让 GC 回收。
 				function assert(fn) {
+					// 创建测试用节点
 					var div = document.createElement("div");
 
 					try {
+						// 转换fn的返回值为boolean值
+						// fn(div) -- assert(function(div){}) 这里的 div 就是上面创建的测试节点
 						return !!fn(div);
 					} catch (e) {
 						return false;
+						// 结束时移除这个节点
 					} finally {
 						// Remove from its parent by default
 						if (div.parentNode) {
 							div.parentNode.removeChild(div);
 						}
 						// release memory in IE
+						// 在 IE 里释放内存
 						div = null;
 					}
 				}
@@ -2007,19 +2030,25 @@
 					// See http://bugs.jquery.com/ticket/13378
 					rbuggyQSA = [];
 
+					// 如果 rnative.test(doc.querySelectorAll) 为 true
+					// 即是 浏览器支持 querySelectorAll
+					// rbuggyQSA -- 保存了用于解决一些浏览器兼容问题的 bug 修补的正则表达式
 					if ((support.qsa = rnative.test(doc.querySelectorAll))) {
 						// Build QSA regex
 						// Regex strategy adopted from Diego Perini
+						// 一个利用 assert 函数的 bug 测试例子
 						assert(function(div) {
 							// Select is set to empty string on purpose
 							// This is to test IE's treatment of not explicitly
 							// setting a boolean content attribute,
 							// since its presence should be enough
 							// http://bugs.jquery.com/ticket/12359
+							// 创建一些子节点
 							div.innerHTML = "<select><option selected=''></option></select>";
 
 							// Support: IE8
 							// Boolean attributes and "value" are not treated correctly
+							// 测试 document.querySelectorAll() 的正确性
 							if (!div.querySelectorAll("[selected]").length) {
 								rbuggyQSA.push("\\[" + whitespace + "*(?:value|" + booleans + ")");
 							}
@@ -2032,6 +2061,7 @@
 							}
 						});
 
+						// 
 						assert(function(div) {
 
 							// Support: Opera 10-12/IE8
