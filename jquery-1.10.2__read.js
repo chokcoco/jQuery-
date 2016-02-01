@@ -856,7 +856,7 @@
 						// 现在是在IE跟旧版本的Chrome是支持此方法的，新版浏览器没有 window.execScript 这个API
 						(window.execScript || function(data) {
 							// 这里为何不能直接：eval.call( window, data );
-							// 在 chrome 一些旧版本里eval.call( window, data )无效 
+							// 在chrome一些旧版本里eval.call( window, data )无效 
 							window["eval"].call(window, data);
 						})(data);
 					}
@@ -1351,6 +1351,8 @@
 			 */
 			(function(window, undefined) {
 
+				// 一些变量
+				// support -- 用于检测浏览器对一些原生方法是否支持（ document.getElementsByClassName 这些）
 				var i,
 					support,
 					cachedruns,
