@@ -1609,7 +1609,7 @@
 
 				// Sizzle 引擎的入口函数
 				// 选择器入口，jQuery的构造函数要处理6大类情况
-				// 但是只有在处理选择器表达式(selector expression)时才会调用Sizzle选择器引擎。
+				// 但是只有在处理选择器表达式(selector expression)时才会调用 Sizzle 选择器引擎。
 				// @param selector 已去掉头尾空白的选择器字符串 
 				// @param context 执行匹配的最初的上下文（即DOM元素集合）。若context没有赋值，则取document。 
 				// @param results 已匹配出的部分最终结果。若results没有赋值，则赋予空数组。 
@@ -1800,6 +1800,7 @@
 				 * Mark a function for special use by Sizzle
 				 * @param {Function} fn The function to mark
 				 */
+				// 标记函数
 				function markFunction(fn) {
 					fn[expando] = true;
 					return fn;
@@ -2543,8 +2544,9 @@
 						}
 					},
 
+					// 过滤器
 					filter: {
-
+						// TAG 过滤
 						"TAG": function(nodeNameSelector) {
 							var nodeName = nodeNameSelector.replace(runescape, funescape).toLowerCase();
 							return nodeNameSelector === "*" ?
@@ -2556,6 +2558,7 @@
 								};
 						},
 
+						// CLASS 过滤
 						"CLASS": function(className) {
 							var pattern = classCache[className + " "];
 
@@ -2566,6 +2569,7 @@
 								});
 						},
 
+						// 属性过滤
 						"ATTR": function(name, operator, check) {
 							return function(elem) {
 								var result = Sizzle.attr(elem, name);
@@ -2590,6 +2594,7 @@
 							};
 						},
 
+						// 
 						"CHILD": function(type, what, argument, first, last) {
 							var simple = type.slice(0, 3) !== "nth",
 								forward = type.slice(-4) !== "last",
