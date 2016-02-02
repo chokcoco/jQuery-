@@ -16,7 +16,7 @@
  */
 
 // 用一个函数域包起来，就是所谓的沙箱
-// 在这里边var定义的变量，属于这个函数域内的局部变量，避免污染全局
+// 在这里边 var 定义的变量，属于这个函数域内的局部变量，避免污染全局
 // 把当前沙箱需要的外部变量通过函数参数引入进来
 // 只要保证参数对内提供的接口的一致性，你还可以随意替换传进来的这个参数
 (function(window, undefined) {
@@ -1351,8 +1351,15 @@
 			 */
 			(function(window, undefined) {
 
-				// 一些变量
+				// 一些变量，下文会用到，可以先初略了解
 				// support -- 用于检测浏览器对一些原生方法是否支持（ document.getElementsByClassName 这些）
+				// cachedruns --
+				// Expr -- 
+				// getText --
+				// isXML -- 是否是XML
+				// compile --
+				// outermostContext -- 最大的上下文环境
+				// sortInput --
 				var i,
 					support,
 					cachedruns,
@@ -1374,13 +1381,22 @@
 					contains,
 
 					// Instance-specific data
+					// 用来对特殊的函数进行标记
 					expando = "sizzle" + -(new Date()),
+					// 保存复用的 document 变量，提高效率
 					preferredDoc = window.document,
 					dirruns = 0,
 					done = 0,
+
+					// 这里定义了 3 个缓存函数
+					// 使用方法：
+			    // 通过 classCache( key , value ) 的形式进行存储
+			    // 通过 classCache[ key + ' '] 来进行获取
 					classCache = createCache(),
 					tokenCache = createCache(),
 					compilerCache = createCache(),
+
+					// 刚检查完的两个元素是否重复
 					hasDuplicate = false,
 					sortOrder = function(a, b) {
 						if (a === b) {
@@ -1391,17 +1407,22 @@
 					},
 
 					// General-purpose constants
+					// typeof undefined --> "undefined"
+					// 将 undefined 类型转换为字符串，用于判断
 					strundefined = typeof undefined,
 					MAX_NEGATIVE = 1 << 31,
 
 					// Instance methods
+					// 定义一些常用方法的入口（后面使用 apply 或者 call 调用）
 					hasOwn = ({}).hasOwnProperty,
 					arr = [],
 					pop = arr.pop,
 					push_native = arr.push,
 					push = arr.push,
 					slice = arr.slice,
+
 					// Use a stripped-down indexOf if we can't use a native one
+					// 定义一个 indexOf 方法（如果原生浏览器支持则使用原生的）
 					indexOf = arr.indexOf || function(elem) {
 						var i = 0,
 							len = this.length;
@@ -1413,6 +1434,7 @@
 						return -1;
 					},
 
+					// 用来在做属性选择的时候进行判断
 					booleans = "checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|loop|multiple|open|readonly|required|scoped",
 
 					// Regular expressions
@@ -1427,6 +1449,8 @@
 					// http://www.w3.org/TR/css3-syntax/#characters
 					// 一段正则规则（这里并非完整的正则表达式，只是一段）
 					// 匹配符合 css 命名的字符串
+					// \\\\. 转换到正则表达式中就是 \\.+ 用来兼容带斜杠的 css
+    			// 三种匹配字符的方式：\\.+ ，[\w-]+ , 大于\xa0的字符+ ，为什么匹配这三个请看上面的链接
 					characterEncoding = "(?:\\\\.|[\\w-]|[^\\x00-\\xa0])+",
 
 					// Loosely modeled on CSS identifier characters
@@ -1436,7 +1460,17 @@
 					identifier = characterEncoding.replace("w", "w#"),
 
 					// Acceptable operators http://www.w3.org/TR/selectors/#attribute-selectors
-					// 属性
+					// attributes = "\[[\x20\t\r\n\f]*((?:\\.|[\w-]|[^\x00-\xa0])+)[\x20\t\r\n\f]*(?:([*^$|!~]?=)[\x20\t\r\n\f]*(?:(['"])((?:\\.|[^\\])*?)\3|((?:\\.|[\w#-]|[^\x00-\xa0])+)|)|)[\x20\t\r\n\f]*\]"
+					// 得到的捕获组序列:
+			    // $1:attrName, $2:([*^$|!~]?=), $3:(['\"]), $4:((?:\\\\.|[^\\\\])*?)\\3|(" + identifier + ")|)|), $5:(" + identifier + ")
+			    // $1 捕获的是 attrName,
+			    // $2 捕获的是 = 或 != 这样的等号方式，
+			    // $3 捕获单双引号
+			    // $4 提供三种匹配字符串的方式：\\.*?\3,非斜杠*?\3(因为斜杠没意义),识别符,此处相当于捕获 attrValue，只不过要兼容带引号和不带两种形式
+			    // $5 捕获识别符
+			    // 看 attributes 开头和结尾匹配的是代表属性选择符的'['和']'，
+			    // 所以整个正则捕获出来的结果分别代表的含义是[ attrName、等号、引号、attrValue、attrValue ]
+					// 大致就是可以匹配 "[name = abc]" | "[name = 'abc']" 这种属性表达式
 					attributes = "\\[" + whitespace + "*(" + characterEncoding + ")" + whitespace +
 					"*(?:([*^$|!~]?=)" + whitespace + "*(?:(['\"])((?:\\\\.|[^\\\\])*?)\\3|(" + identifier + ")|)|)" + whitespace + "*\\]",
 
@@ -1447,30 +1481,46 @@
 					// These preferences are here to reduce the number of selectors
 					//   needing tokenize in the PSEUDO preFilter
 					// 伪类
+					// 得到的捕获组序列:
+					// $1: pseudoName
+					// $2: ((['\"])((?:\\\\.|[^\\\\])*?)\\3|((?:\\\\.|[^\\\\()[\\]]|" + attributes.replace( 3, 8 ) + ")*)|.*)
+    			// $3: (['\"])
+    			// $4: ((?:\\\\.|[^\\\\])*?),$5:((?:\\\\.|[^\\\\()[\\]]|" + attributes.replace( 3, 8 ) + ")*)
+    			// $1 捕获伪元素或伪类的名字，
+    			// $2 捕获两种类型的字符，一种是带引号的字符串，一种是attributes那样的键值对
+    			// $3 捕获引号，
+    			// $4 和 $5 分别捕获 $2 中的一部分
 					pseudos = ":(" + characterEncoding + ")(?:\\(((['\"])((?:\\\\.|[^\\\\])*?)\\3|((?:\\\\.|[^\\\\()[\\]]|" + attributes.replace(3, 8) + ")*)|.*)\\)|)",
 
 					// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
-					// 前后空格
+					// 匹配前后空格
 					rtrim = new RegExp("^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g"),
 
-					// 逗号
+					// 匹配逗号
+					// 这个后面用来清除 css 规则中组与组之间的逗号
 					rcomma = new RegExp("^" + whitespace + "*," + whitespace + "*"),
-					// 连接符 [>+~]
+
+					// 选择器当中的关系连接符 [>+~ whitespace ]
+					// $1: ([>+~]|whitespace)分别捕获4种连接符:'>','+','~','whitespace'
+					// 第二个 whitespace 的作用是匹配空格，表示关系连接符 当中的后代关系（例如"div p"这里面的空格）
 					rcombinators = new RegExp("^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*"),
 
 					// 兄弟关系[+~]
 					rsibling = new RegExp(whitespace + "*[+~]"),
+					
 					// rattributeQuotes = new RegExp("=[\\x20\\t\\r\\n\\f]*([^\\]'\"]*)[\\x20\\t\\r\\n\\f]*\\]","g")
 					// 匹配属性等号 [type = xxx] =之后的 = xxx] 
 					rattributeQuotes = new RegExp("=" + whitespace + "*([^\\]'\"]*)" + whitespace + "*\\]", "g"),
 
-					// 伪类
+					// 构造匹配伪类的正则表达式
 					rpseudo = new RegExp(pseudos),
 
-					// id选择器
+					// 构造匹配符合 css 命名规范的字符串正则表达式
 					ridentifier = new RegExp("^" + identifier + "$"),
 
 					// 存储了匹配各类选择器的数组
+					// 这里是最后用来检测的正则表达式，
+					// 使用形式通常是matchExpr[tokens[i].type].test(...)
 					matchExpr = {
 						"ID": new RegExp("^#(" + characterEncoding + ")"),
 						"CLASS": new RegExp("^\\.(" + characterEncoding + ")"),
@@ -1505,12 +1555,18 @@
 					rescape = /'|\\/g,
 
 					// CSS escapes http://www.w3.org/TR/CSS21/syndata.html#escaped-characters
-					runescape = new RegExp("\\\\([\\da-f]{1,6}" + whitespace + "?|(" + whitespace + ")|.)", "ig"),
+					// runescape = /\\([\da-f]{1,6}[\x20\t\r\n\f]?|([\x20\t\r\n\f])|.)/gi
+					// 正则匹配字符编码，类似 \0a0000 这样的编码
+					runescape = new RegExp("\\\\([\\da-f]{1,6}" + whitespace + "?|(" + whitespace + ")|.)", "ig"), 
+					// jQuery还考虑了编码 http://zh.wikipedia.org/wiki/UTF-16
+    			// 转换为 UTF-16 编码，若某个字符是多种字符，超过 BMP 的计数范围 0xFFFF ,则必须将其编码成小于 0x10000 的形式。
 					funescape = function(_, escaped, escapedWhitespace) {
 						var high = "0x" + escaped - 0x10000;
 						// NaN means non-codepoint
 						// Support: Firefox
 						// Workaround erroneous numeric interpretation of +"0x"
+						// 这里的 high !== 用于判断 high是否是 NaN , NaN !== NaN
+        		// 当 high 为 NaN , escapedWhitespace 为 undefined 时，再判断 high 是否为负数
 						return high !== high || escapedWhitespace ?
 							escaped :
 							// BMP codepoint
@@ -1720,16 +1776,21 @@
 				 *	property name the (space-suffixed) string and (if the cache is larger than Expr.cacheLength)
 				 *	deleting the oldest entry
 				 */
-				
+				// 创建一个 key-value 格式的缓存
 				function createCache() {
+					// 用来保存已经存储过的 key-value，这是一种闭包
 					var keys = [];
 
+					// 这里使用cache这个函数本身来当作存放数据的对象
 					function cache(key, value) {
 						// Use (key + " ") to avoid collision with native prototype properties (see Issue #157)
+						// key 后面加空格是为了避免覆盖原生属性
+    				// 当缓存栈超过长度限制时，则需要删除以前的缓存（后进先出，从栈底删除）
 						if (keys.push(key += " ") > Expr.cacheLength) {
 							// Only keep the most recent entries
 							delete cache[keys.shift()];
 						}
+						// 返回存储好的信息
 						return (cache[key] = value);
 					}
 					return cache;
@@ -1880,6 +1941,7 @@
 				 * @param {Element|Object} [doc] An element or document object to use to set the document
 				 * @returns {Object} Returns the current document
 				 */
+				
 				setDocument = Sizzle.setDocument = function(node) {
 					var doc = node ? node.ownerDocument || node : preferredDoc,
 						parent = doc.defaultView;
@@ -1942,6 +2004,9 @@
 					// Check if getElementById returns elements by name
 					// The broken getElementById methods don't pick up programatically-set names,
 					// so use a roundabout getElementsByName test
+					// 兼容 IE10 以下
+					// 检查是否 getElementById 
+					// getElemenById 方法不收集程序设置的 name 属性，所以迂回的使用 getElementsByName 测试
 					support.getById = assert(function(div) {
 						docElem.appendChild(div).id = expando;
 						return !doc.getElementsByName || !doc.getElementsByName(expando).length;
@@ -1958,8 +2023,10 @@
 								return m && m.parentNode ? [m] : [];
 							}
 						};
+						// ID元匹配器工厂
 						Expr.filter["ID"] = function(id) {
 							var attrId = id.replace(runescape, funescape);
+							// 生成一个匹配器
 							return function(elem) {
 								return elem.getAttribute("id") === attrId;
 							};
@@ -1969,9 +2036,9 @@
 						// getElementById is not reliable as a find shortcut
 						// 兼容ie6 7
 						delete Expr.find["ID"];
-
 						Expr.filter["ID"] = function(id) {
 							var attrId = id.replace(runescape, funescape);
+							// 生成一个匹配器
 							return function(elem) {
 								var node = typeof elem.getAttributeNode !== strundefined && elem.getAttributeNode("id");
 								return node && node.value === attrId;
