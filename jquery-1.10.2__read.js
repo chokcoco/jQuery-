@@ -3955,7 +3955,7 @@
 								deferred.done(arguments).fail(arguments);
 								return this;
 							},
-							// 把done()、fail()和progrss()合在一起写
+							// 把 done()、fail() 和 progrss() 合在一起写
 							then: function( /* fnDone, fnFail, fnProgress */ ) {
 								var fns = arguments;
 								return jQuery.Deferred(function(newDefer) {
