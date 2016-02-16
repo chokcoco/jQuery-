@@ -37,10 +37,11 @@
 
 			// Support: IE<10
 			// For `typeof xmlNode.method` instead of `xmlNode.method !== undefined`
+			// 将 undefined 转换为字符串 "undefined"
 			core_strundefined = typeof undefined,
 
 			// Use the correct document accordingly with window argument (sandbox)
-			// 通过闭包函数传入的 window 对象，document之类的全局变量被其他插件修改
+			// 通过闭包函数传入的 window 对象，避免 document 之类的全局变量被其他插件修改
 			location = window.location,
 			document = window.document,
 			docElem = document.documentElement,
@@ -1390,8 +1391,8 @@
 
 					// 这里定义了 3 个缓存函数
 					// 使用方法：
-			    // 通过 classCache( key , value ) 的形式进行存储
-			    // 通过 classCache[ key + ' '] 来进行获取
+			    // 通过 classCache(key, value) 的形式进行存储
+			    // 通过 classCache[key+ ' '] 来进行获取
 					classCache = createCache(),
 					tokenCache = createCache(),
 					compilerCache = createCache(),
@@ -1416,6 +1417,7 @@
 					// 定义一些常用方法的入口（后面使用 apply 或者 call 调用）
 					hasOwn = ({}).hasOwnProperty,
 					arr = [],
+					// 分别缓存了数组的 pop 、push 、silce 方法
 					pop = arr.pop,
 					push_native = arr.push,
 					push = arr.push,
@@ -1558,6 +1560,7 @@
 					// runescape = /\\([\da-f]{1,6}[\x20\t\r\n\f]?|([\x20\t\r\n\f])|.)/gi
 					// 正则匹配字符编码，类似 \0a0000 这样的编码
 					runescape = new RegExp("\\\\([\\da-f]{1,6}" + whitespace + "?|(" + whitespace + ")|.)", "ig"), 
+					
 					// jQuery还考虑了编码 http://zh.wikipedia.org/wiki/UTF-16
     			// 转换为 UTF-16 编码，若某个字符是多种字符，超过 BMP 的计数范围 0xFFFF ,则必须将其编码成小于 0x10000 的形式。
 					funescape = function(_, escaped, escapedWhitespace) {
@@ -1608,7 +1611,7 @@
 				}
 
 				// Sizzle 引擎的入口函数
-				// 选择器入口，jQuery的构造函数要处理6大类情况
+				// 选择器入口，jQuery 的构造函数要处理 6 大类情况
 				// 但是只有在处理选择器表达式(selector expression)时才会调用 Sizzle 选择器引擎。
 				// @param selector 已去掉头尾空白的选择器字符串 
 				// @param context 执行匹配的最初的上下文（即DOM元素集合）。若context没有赋值，则取document。 
@@ -1617,15 +1620,16 @@
 				function Sizzle(selector, context, results, seed) {
 					var match, elem, m, nodeType,
 						// QSA vars
-						// QSA 表示 querySelectorAll
+						// QSA 表示 querySelectorAll ，高级浏览器支持 querySelectorAll 这个接口，Sizzle 的作用就是兼容不支持的低级浏览器
 						i, groups, old, nid, newContext, newSelector;
 
 					if ((context ? context.ownerDocument || context : preferredDoc) !== document) {
-						// 根据不同的浏览器环境,设置合适的Expr方法,构造合适的rbuggy测试
+						// 根据不同的浏览器环境,设置合适的 Expr 方法,构造合适的 rbuggy 测试
 						setDocument(context);
 					}
 
-					// 参数解析部分已说明
+					// 执行匹配的最初的上下文（即DOM元素集合）。若context没有赋值，则取document
+					// 已匹配出的部分最终结果。若results没有赋值，则赋予空数组
 					context = context || document;
 					results = results || [];
 
@@ -1636,6 +1640,7 @@
 					}
 
 					// nodeType 属性返回被选节点的节点类型
+					// nodeType 各个数字所代表的含义 http://www.w3school.com.cn/xmldom/prop_element_nodetype.asp
 					// 1 -- Element
 					// 9 -- Document
 					// 如果上下文传入错误，返回空数组
@@ -1648,7 +1653,7 @@
 					if (documentIsHTML && !seed) {
 
 						// Shortcuts
-						// 便捷的匹配 id tag 或者 class 选择器
+						// 快速匹配，如果是 id 、tag 或者 class 选择器
 						// rquickExpr = /^(?:#([\w-]+)|(\w+)|\.([\w-]+))$/
 						if ((match = rquickExpr.exec(selector))) {
 							// Speed-up: Sizzle("#ID")
@@ -1706,7 +1711,7 @@
 
 						// QSA path
 						// QSA 表示 querySelectorAll，原生的QSA运行速度非常快,因此尽可能使用 QSA 来对 CSS 选择器进行查询
-            // querySelectorAll是原生的选择器,但不支持老的浏览器版本, 主要是 IE8 及以前的浏览器
+            // querySelectorAll 是原生的选择器，但不支持老的浏览器版本, 主要是 IE8 及以前的浏览器
             // rbuggyQSA 保存了用于解决一些浏览器兼容问题的 bug 修补的正则表达式
             // QSA 在不同浏览器上运行的效果有差异，表现得非常奇怪，因此对某些 selector 不能用 QSA
             // 为了适应不同的浏览器，就需要首先进行浏览器兼容性测试，然后确定测试正则表达式,用 rbuggyQSA 来确定 selector 是否能用 QSA
@@ -1765,7 +1770,7 @@
 					}
 
 					// All others
-					// 到这里仍没有返回结果，表明这些 selector 无法直接使用原生的 document 查询方法
+					// 到这里仍没有返回结果，表明这些 selector 无法直接使用原生的 document 查询方法（当前浏览器不支持 QSA）
 					// 调用 select 方法
 					return select(selector.replace(rtrim, "$1"), context, results, seed);
 				}
@@ -1840,6 +1845,7 @@
 				 * @param {String} attrs Pipe-separated list of attributes
 				 * @param {Function} handler The method that will be applied
 				 */
+				// 
 				function addHandle(attrs, handler) {
 					var arr = attrs.split("|"),
 						i = attrs.length;
@@ -2362,6 +2368,7 @@
 						val;
 				};
 
+				// 抛出异常
 				Sizzle.error = function(msg) {
 					throw new Error("Syntax error, unrecognized expression: " + msg);
 				};
@@ -2945,7 +2952,7 @@
 				setFilters.prototype = Expr.filters = Expr.pseudos;
 				Expr.setFilters = new setFilters();
 
-				// 词法分析，返回的是一个Token序列
+				// 词法分析，返回的是一个Token序列(根据是否是并联选择器，可能返回的是多组Token序列)
 				// Sizzle的 Token 格式如下 ：{value:'匹配到的字符串', type:'对应的Token类型', matches:'正则匹配到的一个结构'}
 				// 假设传入进来的选择器是：div > p + .clr[type="checkbox"], #id:first-child
 				function tokenize(selector, parseOnly) {
@@ -3236,27 +3243,37 @@
 					});
 				}
 
+				// 生成用于匹配单个选择器组的函数
+        // 充当了 selector“tokens” 与 Expr 中定义的匹配方法的串联与纽带的作用，
+        // 可以说选择符的各种排列组合都是能适应的了
+        // Sizzle 巧妙的就是它没有直接将拿到的词法分析的结果与 Expr 中的方法逐个匹配逐个执行，
+        // 而是先根据规则组合出一个大的匹配方法，最后一步执行。但是组合之后怎么执行的
 				function matcherFromTokens(tokens) {
 					var checkContext, matcher, j,
 						len = tokens.length,
 						leadingRelative = Expr.relative[tokens[0].type],
+						// 亲密度关系
 						implicitRelative = leadingRelative || Expr.relative[" "],
 						i = leadingRelative ? 1 : 0,
 
 						// The foundational matcher ensures that elements are reachable from top-level context(s)
+						// 确保这些元素可以在 context 中找到
 						matchContext = addCombinator(function(elem) {
 							return elem === checkContext;
 						}, implicitRelative, true),
+
 						matchAnyContext = addCombinator(function(elem) {
 							return indexOf.call(checkContext, elem) > -1;
 						}, implicitRelative, true),
+
+						// 这里用来确定元素在哪个 context	
 						matchers = [function(elem, context, xml) {
 							return (!leadingRelative && (xml || context !== outermostContext)) || (
 								(checkContext = context).nodeType ?
 								matchContext(elem, context, xml) :
 								matchAnyContext(elem, context, xml));
 						}];
-
+	
 					for (; i < len; i++) {
 						if ((matcher = Expr.relative[tokens[i].type])) {
 							matchers = [addCombinator(elementMatcher(matchers), matcher)];
@@ -3395,30 +3412,39 @@
 						superMatcher;
 				}
 
+				// 编译函数机制
+   			// 通过传递进来的 selector 和 match 生成匹配器：
 				compile = Sizzle.compile = function(selector, group /* Internal Use Only */ ) {
 					var i,
 						setMatchers = [],
 						elementMatchers = [],
 						cached = compilerCache[selector + " "];
 
+					// 先看看有没有缓存
 					if (!cached) {
 						// Generate a function of recursive functions that can be used to check each element
+						// 如果没有词法解析过
 						if (!group) {
 							group = tokenize(selector);
 						}
 						i = group.length;
+						// 如果是有并联选择器这里多次等循环
 						while (i--) {
+							// 这里用 matcherFromTokens 来生成对应 Token 的匹配器
 							cached = matcherFromTokens(group[i]);
 							if (cached[expando]) {
 								setMatchers.push(cached);
 							} else {
+								// 普通的那些匹配器都压入了elementMatchers里边
 								elementMatchers.push(cached);
 							}
 						}
 
 						// Cache the compiled function
+						// 这里可以看到，是通过 matcherFromGroupMatchers 这个函数来生成最终的匹配器
 						cached = compilerCache(selector, matcherFromGroupMatchers(elementMatchers, setMatchers));
 					}
+					// 把这个终极匹配器返回到 select 函数中
 					return cached;
 				};
 
@@ -3527,6 +3553,7 @@
 
 					// Compile and execute a filtering function
 					// Provide `match` to avoid retokenization if we modified the selector above
+					// tokenize(selector) 的结果不止一组，无法使用上述简便的方法
 					// 交由 compile 来生成一个称为终极匹配器
 					// 通过这个匹配器过滤 seed ，把符合条件的结果放到 results 里边
 					// 生成编译函数 
