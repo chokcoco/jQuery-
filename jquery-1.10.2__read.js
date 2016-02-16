@@ -427,10 +427,10 @@
 			},
 
 			// 回溯链式调用的上一个对象
-      // $("#id").find('.clr').html('.clr HTML').end().html('#id HTML')
-      // 本来 find 函数已经使得链的上下文切换到 .clr 这个 jQ 对象了，为了最后能回到 #id 这个 jQ 对象
-      // 可以使用 end 方法来返回
-      // 这里的秘籍就是每个对象里边的 prevObject 保存着链中的上一个 jQ 对象
+			// $("#id").find('.clr').html('.clr HTML').end().html('#id HTML')
+			// 本来 find 函数已经使得链的上下文切换到 .clr 这个 jQ 对象了，为了最后能回到 #id 这个 jQ 对象
+			// 可以使用 end 方法来返回
+			// 这里的秘籍就是每个对象里边的 prevObject 保存着链中的上一个 jQ 对象
 			end: function() {
 				return this.prevObject || this.constructor(null);
 			},
@@ -1230,7 +1230,7 @@
 							return ret;
 						}
 				});
-			
+
 			// 
 			jQuery.ready.promise = function(obj) {
 				if (!readyList) {
@@ -1308,7 +1308,7 @@
 				// 可以使用 .done .fail 等方法
 				return readyList.promise(obj);
 
-			// Populate the class2type map
+				// Populate the class2type map
 			};
 			// typeof并不能区分出它是Array类型，jQuery为了扩展typeof的表达力，因此扩展了type方法
 			// 针对一些特殊的对象（例如null，window，RegExp）也进行精准的类型判断
@@ -1391,8 +1391,8 @@
 
 					// 这里定义了 3 个缓存函数
 					// 使用方法：
-			    // 通过 classCache(key, value) 的形式进行存储
-			    // 通过 classCache[key+ ' '] 来进行获取
+					// 通过 classCache(key, value) 的形式进行存储
+					// 通过 classCache[key+ ' '] 来进行获取
 					classCache = createCache(),
 					tokenCache = createCache(),
 					compilerCache = createCache(),
@@ -1452,7 +1452,7 @@
 					// 一段正则规则（这里并非完整的正则表达式，只是一段）
 					// 匹配符合 css 命名的字符串
 					// \\\\. 转换到正则表达式中就是 \\.+ 用来兼容带斜杠的 css
-    			// 三种匹配字符的方式：\\.+ ，[\w-]+ , 大于\xa0的字符+ ，为什么匹配这三个请看上面的链接
+					// 三种匹配字符的方式：\\.+ ，[\w-]+ , 大于\xa0的字符+ ，为什么匹配这三个请看上面的链接
 					characterEncoding = "(?:\\\\.|[\\w-]|[^\\x00-\\xa0])+",
 
 					// Loosely modeled on CSS identifier characters
@@ -1464,14 +1464,14 @@
 					// Acceptable operators http://www.w3.org/TR/selectors/#attribute-selectors
 					// attributes = "\[[\x20\t\r\n\f]*((?:\\.|[\w-]|[^\x00-\xa0])+)[\x20\t\r\n\f]*(?:([*^$|!~]?=)[\x20\t\r\n\f]*(?:(['"])((?:\\.|[^\\])*?)\3|((?:\\.|[\w#-]|[^\x00-\xa0])+)|)|)[\x20\t\r\n\f]*\]"
 					// 得到的捕获组序列:
-			    // $1:attrName, $2:([*^$|!~]?=), $3:(['\"]), $4:((?:\\\\.|[^\\\\])*?)\\3|(" + identifier + ")|)|), $5:(" + identifier + ")
-			    // $1 捕获的是 attrName,
-			    // $2 捕获的是 = 或 != 这样的等号方式，
-			    // $3 捕获单双引号
-			    // $4 提供三种匹配字符串的方式：\\.*?\3,非斜杠*?\3(因为斜杠没意义),识别符,此处相当于捕获 attrValue，只不过要兼容带引号和不带两种形式
-			    // $5 捕获识别符
-			    // 看 attributes 开头和结尾匹配的是代表属性选择符的'['和']'，
-			    // 所以整个正则捕获出来的结果分别代表的含义是[ attrName、等号、引号、attrValue、attrValue ]
+					// $1:attrName, $2:([*^$|!~]?=), $3:(['\"]), $4:((?:\\\\.|[^\\\\])*?)\\3|(" + identifier + ")|)|), $5:(" + identifier + ")
+					// $1 捕获的是 attrName,
+					// $2 捕获的是 = 或 != 这样的等号方式，
+					// $3 捕获单双引号
+					// $4 提供三种匹配字符串的方式：\\.*?\3,非斜杠*?\3(因为斜杠没意义),识别符,此处相当于捕获 attrValue，只不过要兼容带引号和不带两种形式
+					// $5 捕获识别符
+					// 看 attributes 开头和结尾匹配的是代表属性选择符的'['和']'，
+					// 所以整个正则捕获出来的结果分别代表的含义是[ attrName、等号、引号、attrValue、attrValue ]
 					// 大致就是可以匹配 "[name = abc]" | "[name = 'abc']" 这种属性表达式
 					attributes = "\\[" + whitespace + "*(" + characterEncoding + ")" + whitespace +
 					"*(?:([*^$|!~]?=)" + whitespace + "*(?:(['\"])((?:\\\\.|[^\\\\])*?)\\3|(" + identifier + ")|)|)" + whitespace + "*\\]",
@@ -1486,12 +1486,12 @@
 					// 得到的捕获组序列:
 					// $1: pseudoName
 					// $2: ((['\"])((?:\\\\.|[^\\\\])*?)\\3|((?:\\\\.|[^\\\\()[\\]]|" + attributes.replace( 3, 8 ) + ")*)|.*)
-    			// $3: (['\"])
-    			// $4: ((?:\\\\.|[^\\\\])*?),$5:((?:\\\\.|[^\\\\()[\\]]|" + attributes.replace( 3, 8 ) + ")*)
-    			// $1 捕获伪元素或伪类的名字，
-    			// $2 捕获两种类型的字符，一种是带引号的字符串，一种是attributes那样的键值对
-    			// $3 捕获引号，
-    			// $4 和 $5 分别捕获 $2 中的一部分
+					// $3: (['\"])
+					// $4: ((?:\\\\.|[^\\\\])*?),$5:((?:\\\\.|[^\\\\()[\\]]|" + attributes.replace( 3, 8 ) + ")*)
+					// $1 捕获伪元素或伪类的名字，
+					// $2 捕获两种类型的字符，一种是带引号的字符串，一种是attributes那样的键值对
+					// $3 捕获引号，
+					// $4 和 $5 分别捕获 $2 中的一部分
 					pseudos = ":(" + characterEncoding + ")(?:\\(((['\"])((?:\\\\.|[^\\\\])*?)\\3|((?:\\\\.|[^\\\\()[\\]]|" + attributes.replace(3, 8) + ")*)|.*)\\)|)",
 
 					// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
@@ -1509,7 +1509,7 @@
 
 					// 兄弟关系[+~]
 					rsibling = new RegExp(whitespace + "*[+~]"),
-					
+
 					// rattributeQuotes = new RegExp("=[\\x20\\t\\r\\n\\f]*([^\\]'\"]*)[\\x20\\t\\r\\n\\f]*\\]","g")
 					// 匹配属性等号 [type = xxx] =之后的 = xxx] 
 					rattributeQuotes = new RegExp("=" + whitespace + "*([^\\]'\"]*)" + whitespace + "*\\]", "g"),
@@ -1549,7 +1549,7 @@
 					// 匹配input类型 ：
 					// input select textarea button
 					rinputs = /^(?:input|select|textarea|button)$/i,
-					
+
 					// 匹配 h1 ~ h6 标签
 					rheader = /^h\d$/i,
 
@@ -1559,17 +1559,17 @@
 					// CSS escapes http://www.w3.org/TR/CSS21/syndata.html#escaped-characters
 					// runescape = /\\([\da-f]{1,6}[\x20\t\r\n\f]?|([\x20\t\r\n\f])|.)/gi
 					// 正则匹配字符编码，类似 \0a0000 这样的编码
-					runescape = new RegExp("\\\\([\\da-f]{1,6}" + whitespace + "?|(" + whitespace + ")|.)", "ig"), 
-					
+					runescape = new RegExp("\\\\([\\da-f]{1,6}" + whitespace + "?|(" + whitespace + ")|.)", "ig"),
+
 					// jQuery还考虑了编码 http://zh.wikipedia.org/wiki/UTF-16
-    			// 转换为 UTF-16 编码，若某个字符是多种字符，超过 BMP 的计数范围 0xFFFF ,则必须将其编码成小于 0x10000 的形式。
+					// 转换为 UTF-16 编码，若某个字符是多种字符，超过 BMP 的计数范围 0xFFFF ,则必须将其编码成小于 0x10000 的形式。
 					funescape = function(_, escaped, escapedWhitespace) {
 						var high = "0x" + escaped - 0x10000;
 						// NaN means non-codepoint
 						// Support: Firefox
 						// Workaround erroneous numeric interpretation of +"0x"
 						// 这里的 high !== 用于判断 high是否是 NaN , NaN !== NaN
-        		// 当 high 为 NaN , escapedWhitespace 为 undefined 时，再判断 high 是否为负数
+						// 当 high 为 NaN , escapedWhitespace 为 undefined 时，再判断 high 是否为负数
 						return high !== high || escapedWhitespace ?
 							escaped :
 							// BMP codepoint
@@ -1658,9 +1658,9 @@
 						if ((match = rquickExpr.exec(selector))) {
 							// Speed-up: Sizzle("#ID")
 							// selector会匹配 #[id] | [tag] | .[class] 其中之一
-          		// match[1] 的值是元素是与 rquickExpr 的第 1 个子表达式相匹配的文本，
-          		// 在这里 match[1] 就是匹配到的 id 选择器的名字（如果有）
-          		// 如果匹配到 id 选择器 #xx 
+							// match[1] 的值是元素是与 rquickExpr 的第 1 个子表达式相匹配的文本，
+							// 在这里 match[1] 就是匹配到的 id 选择器的名字（如果有）
+							// 如果匹配到 id 选择器 #xx 
 							if ((m = match[1])) {
 								// 9 -- Document
 								// 如果上下文是 document
@@ -1711,10 +1711,10 @@
 
 						// QSA path
 						// QSA 表示 querySelectorAll，原生的QSA运行速度非常快,因此尽可能使用 QSA 来对 CSS 选择器进行查询
-            // querySelectorAll 是原生的选择器，但不支持老的浏览器版本, 主要是 IE8 及以前的浏览器
-            // rbuggyQSA 保存了用于解决一些浏览器兼容问题的 bug 修补的正则表达式
-            // QSA 在不同浏览器上运行的效果有差异，表现得非常奇怪，因此对某些 selector 不能用 QSA
-            // 为了适应不同的浏览器，就需要首先进行浏览器兼容性测试，然后确定测试正则表达式,用 rbuggyQSA 来确定 selector 是否能用 QSA
+						// querySelectorAll 是原生的选择器，但不支持老的浏览器版本, 主要是 IE8 及以前的浏览器
+						// rbuggyQSA 保存了用于解决一些浏览器兼容问题的 bug 修补的正则表达式
+						// QSA 在不同浏览器上运行的效果有差异，表现得非常奇怪，因此对某些 selector 不能用 QSA
+						// 为了适应不同的浏览器，就需要首先进行浏览器兼容性测试，然后确定测试正则表达式,用 rbuggyQSA 来确定 selector 是否能用 QSA
 						if (support.qsa && (!rbuggyQSA || !rbuggyQSA.test(selector))) {
 							nid = old = expando;
 							newContext = context;
@@ -1724,9 +1724,9 @@
 							// We can work around this by specifying an extra ID on the root
 							// and working up from there (Thanks to Andrew Dupont for the technique)
 							// IE 8 doesn't work on object elements
-              // QSA 在以某个根节点ID为基础的查找中(.rootClass span)表现很奇怪，
-              // 它会忽略某些selector选项，返回不合适的结果
-              // 一个比较通常的解决方法是为根节点设置一个额外的id，并以此开始查询
+							// QSA 在以某个根节点ID为基础的查找中(.rootClass span)表现很奇怪，
+							// 它会忽略某些selector选项，返回不合适的结果
+							// 一个比较通常的解决方法是为根节点设置一个额外的id，并以此开始查询
 							if (nodeType === 1 && context.nodeName.toLowerCase() !== "object") {
 								// 调用词法分析器分析选择器，得到一个 Token 序列
 								groups = tokenize(selector);
@@ -1790,7 +1790,7 @@
 					function cache(key, value) {
 						// Use (key + " ") to avoid collision with native prototype properties (see Issue #157)
 						// key 后面加空格是为了避免覆盖原生属性
-    				// 当缓存栈超过长度限制时，则需要删除以前的缓存（后进先出，从栈底删除）
+						// 当缓存栈超过长度限制时，则需要删除以前的缓存（后进先出，从栈底删除）
 						if (keys.push(key += " ") > Expr.cacheLength) {
 							// Only keep the most recent entries
 							delete cache[keys.shift()];
@@ -1948,7 +1948,7 @@
 				 * @param {Element|Object} [doc] An element or document object to use to set the document
 				 * @returns {Object} Returns the current document
 				 */
-				
+
 				setDocument = Sizzle.setDocument = function(node) {
 					var doc = node ? node.ownerDocument || node : preferredDoc,
 						parent = doc.defaultView;
@@ -2973,7 +2973,7 @@
 					soFar = selector;
 					groups = [];
 					// 这里的预处理器为了对匹配到的 Token 适当做一些调整
-  				// 其实就是正则匹配到的内容的一个预处理 
+					// 其实就是正则匹配到的内容的一个预处理 
 					preFilters = Expr.preFilter;
 
 					// 当字符串还没解析完毕，循环开始
@@ -2996,8 +2996,8 @@
 
 						// Combinators
 						// 先处理这几个特殊的Token ： >, +, 空格, ~
-    				// 因为他们比较简单，并且是单字符的
-    				// rcombinators = new RegExp("^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*"),
+						// 因为他们比较简单，并且是单字符的
+						// rcombinators = new RegExp("^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*"),
 						if ((match = rcombinators.exec(soFar))) {
 							// 获取到匹配的字符
 							matched = match.shift();
@@ -3015,11 +3015,11 @@
 
 						// Filters
 						// 这里开始分析这几种Token ： TAG, ID, CLASS, ATTR, CHILD, PSEUDO, NAME
-    				// Expr.filter里边对应地 就有这些key
+						// Expr.filter里边对应地 就有这些key
 						for (type in Expr.filter) {
-				      // 如果通过正则匹配到了 Token 格式：match = matchExpr[ type ].exec( soFar )
-      				// 然后看看需不需要预处理：!preFilters[ type ]
-          		// 如果需要 ，那么通过预处理器将匹配到的处理一下 ： match = preFilters[ type ]( match )			
+							// 如果通过正则匹配到了 Token 格式：match = matchExpr[ type ].exec( soFar )
+							// 然后看看需不需要预处理：!preFilters[ type ]
+							// 如果需要 ，那么通过预处理器将匹配到的处理一下 ： match = preFilters[ type ]( match )			
 							if ((match = matchExpr[type].exec(soFar)) && (!preFilters[type] ||
 									(match = preFilters[type](match)))) {
 								matched = match.shift();
@@ -3034,9 +3034,9 @@
 							}
 						}
 
-				    // 如果到了这里都还没matched到，那么说明这个选择器在这里有错误
-				    // 直接中断词法分析过程
-				    // 这就是Sizzle对词法分析的异常处理
+						// 如果到了这里都还没matched到，那么说明这个选择器在这里有错误
+						// 直接中断词法分析过程
+						// 这就是Sizzle对词法分析的异常处理
 						if (!matched) {
 							break;
 						}
@@ -3046,7 +3046,7 @@
 					// if we're just parsing
 					// Otherwise, throw an error or return tokens
 					// 如果只需要这个接口检查选择器的合法性，直接就返回 soFar 的剩余长度，倘若是大于零，说明选择器不合法
-  				// 其余情况，如果 soFar 长度大于零，抛出异常；否则把 groups 记录在 cache 里边并返回，
+					// 其余情况，如果 soFar 长度大于零，抛出异常；否则把 groups 记录在 cache 里边并返回，
 					return parseOnly ?
 						soFar.length :
 						soFar ?
@@ -3244,10 +3244,10 @@
 				}
 
 				// 生成用于匹配单个选择器组的函数
-        // 充当了 selector“tokens” 与 Expr 中定义的匹配方法的串联与纽带的作用，
-        // 可以说选择符的各种排列组合都是能适应的了
-        // Sizzle 巧妙的就是它没有直接将拿到的词法分析的结果与 Expr 中的方法逐个匹配逐个执行，
-        // 而是先根据规则组合出一个大的匹配方法，最后一步执行。但是组合之后怎么执行的
+				// 充当了 selector“tokens” 与 Expr 中定义的匹配方法的串联与纽带的作用，
+				// 可以说选择符的各种排列组合都是能适应的了
+				// Sizzle 巧妙的就是它没有直接将拿到的词法分析的结果与 Expr 中的方法逐个匹配逐个执行，
+				// 而是先根据规则组合出一个大的匹配方法，最后一步执行。但是组合之后怎么执行的
 				function matcherFromTokens(tokens) {
 					var checkContext, matcher, j,
 						len = tokens.length,
@@ -3273,7 +3273,7 @@
 								matchContext(elem, context, xml) :
 								matchAnyContext(elem, context, xml));
 						}];
-	
+
 					for (; i < len; i++) {
 						if ((matcher = Expr.relative[tokens[i].type])) {
 							matchers = [addCombinator(elementMatcher(matchers), matcher)];
@@ -3413,7 +3413,7 @@
 				}
 
 				// 编译函数机制
-   			// 通过传递进来的 selector 和 match 生成匹配器：
+				// 通过传递进来的 selector 和 match 生成匹配器：
 				compile = Sizzle.compile = function(selector, group /* Internal Use Only */ ) {
 					var i,
 						setMatchers = [],
@@ -3486,9 +3486,9 @@
 								support.getById && context.nodeType === 9 && documentIsHTML &&
 								Expr.relative[tokens[1].type]) {
 
-							  // 如果是 id 选择器，那么以 #id 作为新的上下文
+								// 如果是 id 选择器，那么以 #id 作为新的上下文
 								context = (Expr.find["ID"](token.matches[0].replace(runescape, funescape), context) || [])[0];
-								
+
 								// 如果 context 为空，说明新的上下文没找到
 								// 如果 context 这个元素（ selector 第一个 id 选择器）都不存在就不用继续查找
 								if (!context) {
@@ -3503,26 +3503,26 @@
 							// 其中： "needsContext"= new RegExp( "^" + whitespace + "*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" + whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" )
 							// 即是表示如果没有一些结构伪类，这些是需要用另一种方式过滤
 							i = matchExpr["needsContext"].test(selector) ? 0 : tokens.length;
-							
+
 							// 从右向左边查询
 							while (i--) {
 								token = tokens[i];
 
 								// Abort if we hit a combinator
 								// 如果遇到了关系选择器中止
-                //
-                //  > + ~ 空
+								//
+								//  > + ~ 空
 								if (Expr.relative[(type = token.type)]) {
 									break;
 								}
 
 								// 先看看有没有搜索器find，搜索器就是浏览器一些原生的取DOM接口，简单的表述就是以下对象了
-                //  Expr.find = {
-                //    'ID'    : context.getElementById,
-                //    'CLASS' : context.getElementsByClassName,
-                //    'NAME'  : context.getElementsByName,
-                //    'TAG'   : context.getElementsByTagName
-                //  }
+								//  Expr.find = {
+								//    'ID'    : context.getElementById,
+								//    'CLASS' : context.getElementsByClassName,
+								//    'NAME'  : context.getElementsByName,
+								//    'TAG'   : context.getElementsByTagName
+								//  }
 								if ((find = Expr.find[type])) {
 									// Search, expanding context for leading sibling combinators
 									// 尝试一下能否通过这个搜索器搜到符合条件的初始集合seed
@@ -10629,6 +10629,7 @@
 				module.exports = jQuery;
 			} else {
 				// Otherwise expose jQuery to the global object as usual
+				// 设置别名 $
 				window.jQuery = window.$ = jQuery;
 
 				// Register as a named AMD module, since jQuery can be concatenated with other
