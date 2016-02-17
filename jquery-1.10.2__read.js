@@ -3980,7 +3980,6 @@
 							// rejected 对象立刻调用 fail()方法指定的回调函数
 							// notify 对应 处理中
 							// progress 对象立刻调用 progress()方法指定的回调函数
-							// 
 							["resolve", "done", jQuery.Callbacks("once memory"), "resolved"],
 							["reject", "fail", jQuery.Callbacks("once memory"), "rejected"],
 							["notify", "progress", jQuery.Callbacks("memory")]
@@ -10711,3 +10710,4 @@
 				}
 			}
 		})(window);
+		
