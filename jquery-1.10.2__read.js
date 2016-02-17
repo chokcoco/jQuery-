@@ -3065,6 +3065,7 @@
 					return selector;
 				}
 
+				// 
 				function addCombinator(matcher, combinator, base) {
 					var dir = combinator.dir,
 						checkNonElements = base && dir === "parentNode",
@@ -3310,11 +3311,14 @@
 					return elementMatcher(matchers);
 				}
 
+				// 返回一个终极匹配器 superMatcher
 				function matcherFromGroupMatchers(elementMatchers, setMatchers) {
 					// A counter to specify which element is currently being matched
 					var matcherCachedRuns = 0,
 						bySet = setMatchers.length > 0,
 						byElement = elementMatchers.length > 0,
+						// 内嵌 superMatcher
+						// 
 						superMatcher = function(seed, context, xml, results, expandContext) {
 							var elem, j, matcher,
 								setMatched = [],
@@ -3324,10 +3328,15 @@
 								outermost = expandContext != null,
 								contextBackup = outermostContext,
 								// We must always have either seed elements or context
+								// 根据参数 seed 、expandContext 和 context 确定一个起始的查询范围
+								// 如果已经定义了初始集合 seed ，就直接用它，可以缩小过滤范围
+								// 如果没有，那只能把整个 DOM 树节点取出来过滤了
 								elems = seed || byElement && Expr.find["TAG"]("*", expandContext && context.parentNode || context),
-								// Use integer dirruns iff this is the outermost matcher
+								// Use integer dirruns if this is the outermost matcher
 								dirrunsUnique = (dirruns += contextBackup == null ? 1 : Math.random() || 0.1);
 
+							// 搜索范围作用域	
+							// 可以看出对于优化选择器，最右边应该写一个作用域的搜索范围context比较好
 							if (outermost) {
 								outermostContext = context !== document && context;
 								cachedruns = matcherCachedRuns;
@@ -3335,8 +3344,8 @@
 
 							// Add elements passing elementMatchers directly to results
 							// Keep `i` a string if there are no elements so `matchedCount` will be "00" below
-							for (;
-								(elem = elems[i]) != null; i++) {
+							// 开始遍历 seed 种子合集了
+							for (;(elem = elems[i]) != null; i++) {
 								if (byElement && elem) {
 									j = 0;
 									while ((matcher = elementMatchers[j++])) {
@@ -3461,6 +3470,8 @@
 				// Expr.find: 主查找函数
 				// Expr.filter: 主过滤函数
 				// Expr.relative: 块间关系处理函数集
+				// 程序走到这里调用了这个函数，说明选择器 selector 非简单的单条规则（如 id 、 tag 、class）
+				// 且浏览器不支持 querySelectorAll 接口
 				function select(selector, context, results, seed) {
 					var i, tokens, token, type, find,
 						// tokenize 解析出词法格式
@@ -3470,7 +3481,7 @@
 					// 如果外界没有指定初始集合 seed 	
 					if (!seed) {
 						// Try to minimize operations if there is only one group
-						// 如果只有一组，就是在单个选择器的情况
+						// 如果只有一组，就是在单个选择器的情况（即是没有逗号的选择器，并非单条规则）
 						// 可以有一些便捷的处理方式
 						if (match.length === 1) {
 
@@ -3702,8 +3713,9 @@
 					// 可以传递对象：{once:true, memory:true}
 					jQuery.extend({}, options);
 
-				var // Flag to know if list is currently firing
-				// 列表中的函数是否正在回调中
+				var 
+					// Flag to know if list is currently firing
+					// 列表中的函数是否正在回调中
 					firing,
 					// Last fire value (for non-forgettable lists)
 					// 最后一次触发回调时传的参数
@@ -3731,7 +3743,7 @@
 					// Fire callbacks
 					// 触发回调函数列表
 					// 这个函数是内部使用的辅助函数，私有方法
-					// 它被self.fire以及self.fireWith调用 
+					// 它被 self.fire 以及 self.fireWith 调用 
 					fire = function(data) {
 						// 如果参数 memory 为true，则记录 data
 						// 如果是 memory 类型管理器
@@ -3951,8 +3963,8 @@
 				return self;
 			};
 
-			// 当jQuery.extend只有一个参数的时候，其实就是对jQuery静态方法的一个扩展
-			// jQuery 整体架构 对 extend 的解析
+			// 当 jQuery.extend 只有一个参数的时候，其实就是对jQuery静态方法的一个扩展
+			// jQuery 整体架构对 extend 的解析
 			// http://www.cnblogs.com/aaronjs/p/3278578.html
 			jQuery.extend({
 
@@ -3961,47 +3973,68 @@
 				Deferred: function(func) {
 					var tuples = [
 							// action, add listener, listener list, final state
-							// deferred 对象有三种状态，分别是 resolved、rejected、notify
+							// 三个队列，done|fail|progress 成功|失败|处理中
 							// resolved 对应 已完成
 							// resolved 对象立刻调用 done()方法指定的回调函数
 							// rejected 对应 已失败
 							// rejected 对象立刻调用 fail()方法指定的回调函数
+							// notify 对应 处理中
+							// progress 对象立刻调用 progress()方法指定的回调函数
+							// 
 							["resolve", "done", jQuery.Callbacks("once memory"), "resolved"],
 							["reject", "fail", jQuery.Callbacks("once memory"), "rejected"],
 							["notify", "progress", jQuery.Callbacks("memory")]
 						],
-						// pending -- 待定
+						// 初始状态
 						state = "pending",
+
 						promise = {
+							// 确定一个 Deferred 对象的当前状态
 							state: function() {
 								return state;
 							},
 							// 这个方法也是用来指定回调函数的
-							// 它的作用是，不管调用的是deferred.resolve()还是deferred.reject()，最后总是执行
+							// 它的作用是，不管调用的是 deferred.resolve() 还是 deferred.reject() ，最后总是执行
 							always: function() {
 								deferred.done(arguments).fail(arguments);
 								return this;
 							},
-							// 把 done()、fail() 和 progrss() 合在一起写
+							// 把 done()、fail() 和 progress() 合在一起写
+							// deferred.done(fnDone), fail(fnFail) , progress(fnProgress) 的快捷方式
 							then: function( /* fnDone, fnFail, fnProgress */ ) {
+								// 参数为传入的 done 、 fail 、progress 函数
+								// fns = [fnDone, fnFail, fnProgress]
 								var fns = arguments;
+
+								// 这里 return jQuery.Deferred(function( newDefer ) {}).promise();
 								return jQuery.Deferred(function(newDefer) {
+
+									// 遍历 tuples 
 									jQuery.each(tuples, function(i, tuple) {
+										// action 表示三种状态 resolve 、reject 、notify 其中之一
+										// 分别对应 fnDone, fnFail, fnProgress（首先用 isFunction 判断传入的参数是否是方法，注意 && 在这里的用法）
 										var action = tuple[0],
 											fn = jQuery.isFunction(fns[i]) && fns[i];
+
 										// deferred[ done | fail | progress ] for forwarding actions to newDefer
+										// tuple[1] = [ done | fail | progress ]
 										deferred[tuple[1]](function() {
+											// 当前的 this == deferred
 											var returned = fn && fn.apply(this, arguments);
+											// 如果回调返回的是一个Deferred实例
 											if (returned && jQuery.isFunction(returned.promise)) {
+												// 则继续派发事件
 												returned.promise()
 													.done(newDefer.resolve)
 													.fail(newDefer.reject)
 													.progress(newDefer.notify);
+											// 如果回调返回的是不是一个 Deferred 实例，则被当做 args 由 XXXWith 派发出去		
 											} else {
 												newDefer[action + "With"](this === promise ? newDefer.promise() : this, fn ? [returned] : arguments);
 											}
 										});
 									});
+									// 销毁变量，防止内存泄漏（退出前手工设置null避免闭包造成的内存占用）
 									fns = null;
 								}).promise();
 							},
@@ -4011,50 +4044,81 @@
 								return obj != null ? jQuery.extend(obj, promise) : promise;
 							}
 						},
+
+						// 最终生成的异步队列实例
 						deferred = {};
 
 					// Keep pipe for back-compat
+					// 兼容旧版
 					promise.pipe = promise.then;
 
 					// Add list-specific methods
+					// 初始化三条 Callbacks 队列
 					jQuery.each(tuples, function(i, tuple) {
+						// list 为队列，jQuery.Callbacks() ,创建了一个 callback 对象
+						// stateString 为最后的状态
 						var list = tuple[2],
 							stateString = tuple[3];
 
 						// promise[ done | fail | progress ] = list.add
+						// tuple[1] == done | fail | progress
+						// 可以看到 done|fail|progress 其实就是 Callbacks 里边的 add 方法
 						promise[tuple[1]] = list.add;
 
 						// Handle state
+						// 成功或者失败
 						if (stateString) {
+
 							list.add(function() {
 								// state = [ resolved | rejected ]
+								// 修改最终状态
 								state = stateString;
 
 								// [ reject_list | resolve_list ].disable; progress_list.lock
-							}, tuples[i ^ 1][2].disable, tuples[2][2].lock);
+								// 这里用到了 disable ，即是禁用回调列表中的回调
+								// 禁用对立的那条队列
+         				// 注意 0^1 = 1   1^1 = 0
+         				// 即是成功的时候，把失败那条队列禁用
+         				// 即是成功的时候，把成功那条队列禁用
+							}, tuples[i ^ 1][2].disable, 
+							// 锁住当前队列状态
+							tuples[2][2].lock);
 						}
 
 						// deferred[ resolve | reject | notify ]
+						// tuple[0] == resolve | reject | notify 
+						// 可以看到 resolve | reject | notify 其实就是Callbacks里边的fire方法
 						deferred[tuple[0]] = function() {
 							deferred[tuple[0] + "With"](this === deferred ? promise : this, arguments);
 							return this;
 						};
 						deferred[tuple[0] + "With"] = list.fireWith;
 					});
-
 					// Make the deferred a promise
+  				// 这一步之前 promise 和 deferred 绑定了以下方法
+  				// deferred[ resolve | reject | notify ]
+  				// deferred[ resolveWith | rejectWith | notifyWith ]
+  				// promise[ done | fail | progress | then | always | state | promise ]
+ 				
+
+  				// 调用内部辅助的 promise 的 promise 方法（jQ坑爹，起同样名字）
+  				// 扩展 deferred 的 then | done | fail | progress 等方法
 					promise.promise(deferred);
 
 					// Call given func if any
+  				// $.Deferred(func)格式，则自动执行任务func
+  				// 并且把当前任务的上下文跟参数设置成当前生成的deferred实例
 					if (func) {
 						func.call(deferred, deferred);
 					}
 
 					// All done!
+					// 返回实例
 					return deferred;
 				},
 
 				// Deferred helper
+				// 提供一种方法来执行一个或多个对象的回调函数
 				when: function(subordinate /* , ..., subordinateN */ ) {
 					var i = 0,
 						resolveValues = core_slice.call(arguments),
@@ -4105,7 +4169,8 @@
 
 					return deferred.promise();
 				}
-			}); jQuery.support = (function(support) {
+			}); 
+			jQuery.support = (function(support) {
 
 				var all, a, input, select, fragment, opt, eventName, isSupported, i,
 					div = document.createElement("div");
