@@ -3970,6 +3970,16 @@
 
 				// Deferred 方法
 				// 生成的 deferred 对象就是 jQuery 的回调函数解决方案
+				// $.Deferred() 生成一个 deferred 对象
+				// deferred.done(fnc) 指定操作成功时的回调函数
+				// deferred.fail(fnc) 指定操作失败时的回调函数
+				// deferred.promise() 没有参数时，返回一个新的deferred对象，该对象的运行状态无法被改变；接受参数时，作用为在参数对象上部署 deferred 接口
+				// deferred.resolve() 手动改变 deferred 对象的运行状态为"已完成"，从而立即触发 done() 方法
+				// deferred.reject() 这个方法与 deferred.resolve() 正好相反，调用后将 deferred 对象的运行状态变为"已失败"，从而立即触发 fail() 方法
+				// $.when() 为多个操作指定回调函数
+				// deferred.then() 便捷写法，把 done()、fail() 和 progress() 合在一起写
+				// deferred.always() 用来指定回调函数的，它的作用是，不管调用的是 deferred.resolve() 还是 deferred.reject()，最后总是执行
+				// deferred对象详解 http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html
 				Deferred: function(func) {
 					var tuples = [
 							// action, add listener, listener list, final state
@@ -3984,18 +3994,21 @@
 							["reject", "fail", jQuery.Callbacks("once memory"), "rejected"],
 							["notify", "progress", jQuery.Callbacks("memory")]
 						],
-						// 初始状态
+						// 初始状态 ，pending 的意思为待定
 						state = "pending",
 
+						// 定义一个 promise 对象，坑爹是这个对象里面还有一个 promise 对象需要注意
 						promise = {
-							// 确定一个 Deferred 对象的当前状态
+							// 返回一个 Deferred 对象的当前状态
 							state: function() {
 								return state;
 							},
 							// 这个方法也是用来指定回调函数的
 							// 它的作用是，不管调用的是 deferred.resolve() 还是 deferred.reject() ，最后总是执行
 							always: function() {
+								// deferred 是最终生成的异步队列实例
 								deferred.done(arguments).fail(arguments);
+								// 返回 this，便于链式操作
 								return this;
 							},
 							// 把 done()、fail() 和 progress() 合在一起写
@@ -4006,6 +4019,7 @@
 								var fns = arguments;
 
 								// 这里 return jQuery.Deferred(function( newDefer ) {}).promise();
+								// 这里可以看到，又使用了 jQuery.Deferred() 对 then 方法里面的参数又封装了一次
 								return jQuery.Deferred(function(newDefer) {
 
 									// 遍历 tuples 
@@ -4017,9 +4031,11 @@
 
 										// deferred[ done | fail | progress ] for forwarding actions to newDefer
 										// tuple[1] = [ done | fail | progress ]
+										// 绑定 deferred [done | fail | progress] 方法
 										deferred[tuple[1]](function() {
 											// 当前的 this == deferred
 											var returned = fn && fn.apply(this, arguments);
+
 											// 如果回调返回的是一个Deferred实例
 											if (returned && jQuery.isFunction(returned.promise)) {
 												// 则继续派发事件
@@ -4039,7 +4055,10 @@
 							},
 							// Get a promise for this deferred
 							// If obj is provided, the promise aspect is added to the object
+							// 如果 obj 存在，给 obj 拓展 then | done | fail | progress 等方法，也就是外层的 promise 对象所定义的 state 、always 、then 方法
 							promise: function(obj) {
+								// 注意区分这里的 promise ，这里的 promise 指代的是外层的 promise 对象，而不是里层的 promise 方法
+								// 在这里的 promise 就相当于 this
 								return obj != null ? jQuery.extend(obj, promise) : promise;
 							}
 						},
@@ -4086,11 +4105,14 @@
 
 						// deferred[ resolve | reject | notify ]
 						// tuple[0] == resolve | reject | notify 
-						// 可以看到 resolve | reject | notify 其实就是Callbacks里边的fire方法
+						// 可以看到 resolve | reject | notify 其实就是 Callbacks 里边的 fire 方法
+						// 这里还有一点，deferred 对象是暴露了 resolve | reject | notify 三个方法的，而 deferred.promise() 只暴露 done, fail, always 这些个回调函数接口
+						// 之所以通常使用 deferred 是要返回 deferred.promise() ，一是因为 CommonJS promise/A 本来就应当是这样子的；二也是用来避免返回的对象能够主动地调用到 resolve 与 reject 这些关键性的方法
 						deferred[tuple[0]] = function() {
 							deferred[tuple[0] + "With"](this === deferred ? promise : this, arguments);
 							return this;
 						};
+						// deferred[resolveWith | rejectWith | notifyWith] 调用的是 Callbacks 里的 fireWith 方法
 						deferred[tuple[0] + "With"] = list.fireWith;
 					});
 					// Make the deferred a promise
@@ -4100,12 +4122,15 @@
   				// promise[ done | fail | progress | then | always | state | promise ]
  				
 
-  				// 调用内部辅助的 promise 的 promise 方法（jQ坑爹，起同样名字）
+  				// 调用内部辅助的 promise 的 promise 方法（jQ 同学坑爹，起同样名字）
   				// 扩展 deferred 的 then | done | fail | progress 等方法
 					promise.promise(deferred);
 
 					// Call given func if any
-  				// $.Deferred(func)格式，则自动执行任务func
+  				// $.Deferred(func)格式
+  				// $.Deferred() 可以接受一个函数名（注意，是函数名）作为参数，$.Deferred() 所生成的 deferred 对象将作为这个函数的默认参数
+  				// 例子: 
+  				// http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html
   				// 并且把当前任务的上下文跟参数设置成当前生成的deferred实例
 					if (func) {
 						func.call(deferred, deferred);
@@ -4117,26 +4142,44 @@
 				},
 
 				// Deferred helper
-				// 提供一种方法来执行一个或多个对象的回调函数
+				// jQuery.when( deferreds ) 提供一种方法来执行一个或多个对象的回调函数，
+				// http://www.css88.com/jqapi-1.9/jQuery.when/
+				// 参数 deferreds 表示一个或多个延迟对象，或者普通的JavaScript对象
+				// 例子:
+				// http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html
+				// 注意到 $.when 是多任务的，当一个任务失败的时候，代表整个都失败了，
+				// 即是 $.when(d1, d2).done(fnc) 如果 d1 或者 d2 其中一个失败了，代表整个都失败了，将不会执行fnc
+				// 任务是 Deferred 实例，称为异步任务
+				// 任务是普通 function 时，称为同步任务
 				when: function(subordinate /* , ..., subordinateN */ ) {
 					var i = 0,
+						// 将传入的任务对象变为任务对象数组
 						resolveValues = core_slice.call(arguments),
+						// 任务对象数组的长度
 						length = resolveValues.length,
 
 						// the count of uncompleted subordinates
+						// 还没完成的异步任务数
 						remaining = length !== 1 || (subordinate && jQuery.isFunction(subordinate.promise)) ? length : 0,
 
 						// the master Deferred. If resolveValues consist of only a single Deferred, just use that.
+						// 如果任务对象参数列表 resolveValues 只有一个对象，那么 deferred 对象就是它，否则新建一个 deferred 对象
 						deferred = remaining === 1 ? subordinate : jQuery.Deferred(),
 
 						// Update function for both resolve and progress values
+						// 用于更新 成功|处理 中两个状态，
+						// 这里不考虑失败的状态是因为，当一个任务失败的时候，代表整个都失败了。
 						updateFunc = function(i, contexts, values) {
 							return function(value) {
 								contexts[i] = this;
 								values[i] = arguments.length > 1 ? core_slice.call(arguments) : value;
+								// 处理中，派发正在处理事件
 								if (values === progressValues) {
 									deferred.notifyWith(contexts, values);
+								// 成功，并且最后剩余的异步任务为0了	
 								} else if (!(--remaining)) {
+									// 说明所有任务都成功了，派发成功事件出去
+          				// 事件包含的上下文是当前任务前边的所有任务的一个集合
 									deferred.resolveWith(contexts, values);
 								}
 							};
@@ -4145,6 +4188,8 @@
 						progressValues, progressContexts, resolveContexts;
 
 					// add listeners to Deferred subordinates; treat others as resolved
+					// 如果只有一个任务，可以不用做维护状态的处理了
+  				// 只有大于1个任务才需要维护任务的状态
 					if (length > 1) {
 						progressValues = new Array(length);
 						progressContexts = new Array(length);
@@ -4162,13 +4207,18 @@
 					}
 
 					// if we're not waiting on anything, resolve the master
+					// 传进来的任务都是同步任务
 					if (!remaining) {
 						deferred.resolveWith(resolveContexts, resolveValues);
 					}
 
+					// 注意这里有一种情况是，
+					// 如果你不传递任何参数，jQuery.when() 将返回一个 resolved（解决）状态的 promise 对象
 					return deferred.promise();
 				}
 			}); 
+			
+			// 
 			jQuery.support = (function(support) {
 
 				var all, a, input, select, fragment, opt, eventName, isSupported, i,
@@ -10710,4 +10760,5 @@
 				}
 			}
 		})(window);
+
 		
