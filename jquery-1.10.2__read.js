@@ -3981,6 +3981,9 @@
 				// deferred.always() 用来指定回调函数的，它的作用是，不管调用的是 deferred.resolve() 还是 deferred.reject()，最后总是执行
 				// deferred对象详解 http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html
 				Deferred: function(func) {
+					// tuples 创建三个 $.Callbacks 对象，分别表示成功，失败，处理中三种状态
+					// 为什么要写成 tuples 这种格式呢，其实是把相同有共同特性的代码的给合并成一种结构，
+					// 然后下面通过 jQuery.each(tuples, function(i, tuple) {} 一次处理 
 					var tuples = [
 							// action, add listener, listener list, final state
 							// 三个队列，done|fail|progress 成功|失败|处理中
@@ -3998,6 +4001,7 @@
 						state = "pending",
 
 						// 定义一个 promise 对象，坑爹是这个对象里面还有一个 promise 对象需要注意
+						// 具有 state、always、then、primise 方法
 						promise = {
 							// 返回一个 Deferred 对象的当前状态
 							state: function() {
@@ -4072,6 +4076,11 @@
 
 					// Add list-specific methods
 					// 初始化三条 Callbacks 队列
+					// 对于 tuples 的 3 条数据集是分 2 部分处理的
+					// 1、将回调函数（ done | fail | progress ）存入函数
+					// 2、给 deferred 对象扩充6个方法 （resolve/reject/notify/resolveWith/rejectWith/notifyWith ）
+					// resolve/reject/notify 是 callbacks.fireWith ，执行回调函数
+					// resolveWith/rejectWith/notifyWith 是 callbacks.fireWith 队列方法引用
 					jQuery.each(tuples, function(i, tuple) {
 						// list 为队列，jQuery.Callbacks() ,创建了一个 callback 对象
 						// stateString 为最后的状态
@@ -4085,6 +4094,7 @@
 
 						// Handle state
 						// 成功或者失败
+						// 如果存在 deferred 最终状态，向 doneList,failList 中的 list 添加 3 个回调函数
 						if (stateString) {
 
 							list.add(function() {
@@ -4113,6 +4123,7 @@
 							return this;
 						};
 						// deferred[resolveWith | rejectWith | notifyWith] 调用的是 Callbacks 里的 fireWith 方法
+						// 
 						deferred[tuple[0] + "With"] = list.fireWith;
 					});
 					// Make the deferred a promise
@@ -4137,12 +4148,12 @@
 					}
 
 					// All done!
-					// 返回实例
+					// 返回实例，显而易见 Deferred 是个工厂类，返回的是内部构建的 deferred 对象
 					return deferred;
 				},
 
 				// Deferred helper
-				// jQuery.when( deferreds ) 提供一种方法来执行一个或多个对象的回调函数，
+				// $.when( deferreds ) 提供一种方法来执行一个或多个对象的回调函数，
 				// http://www.css88.com/jqapi-1.9/jQuery.when/
 				// 参数 deferreds 表示一个或多个延迟对象，或者普通的JavaScript对象
 				// 例子:
