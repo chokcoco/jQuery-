@@ -1231,7 +1231,7 @@
 						}
 				});
 
-			// 
+			// $.ready()
 			jQuery.ready.promise = function(obj) {
 				if (!readyList) {
 
@@ -1355,10 +1355,10 @@
 				// 一些变量，下文会用到，可以先初略了解
 				// support -- 用于检测浏览器对一些原生方法是否支持（ document.getElementsByClassName 这些）
 				// cachedruns --
-				// Expr -- 
+				// Expr -- 记录跟选择器相关的属性以及操作
 				// getText --
 				// isXML -- 是否是XML
-				// compile --
+				// compile -- 编译函数机制
 				// outermostContext -- 最大的上下文环境
 				// sortInput --
 				var i,
@@ -4040,7 +4040,7 @@
 											// 当前的 this == deferred
 											var returned = fn && fn.apply(this, arguments);
 
-											// 如果回调返回的是一个Deferred实例
+											// 如果回调返回的是一个 Deferred 实例
 											if (returned && jQuery.isFunction(returned.promise)) {
 												// 则继续派发事件
 												returned.promise()
@@ -4133,7 +4133,7 @@
   				// promise[ done | fail | progress | then | always | state | promise ]
  				
 
-  				// 调用内部辅助的 promise 的 promise 方法（jQ 同学坑爹，起同样名字）
+  				// 合并内部辅助的 promise 的 promise 方法（jQ 同学坑爹，起同样名字）
   				// 扩展 deferred 的 then | done | fail | progress 等方法
 					promise.promise(deferred);
 
