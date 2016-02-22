@@ -4229,17 +4229,22 @@
 				}
 			}); 
 			
-			// 
+			// jQuery.support 属性包含表示不同浏览器特性或漏洞的属性集
+			// 需要注意的是，官网强烈建议浏览器功能性检测不要使用 jQuery.support 上的属性。而使用比如 Modernizr 这样的外部类库（http://www.css88.com/jqapi-1.9/jQuery.support/）
+			// example:
+			// $.support.ajax --> true
 			jQuery.support = (function(support) {
 
 				var all, a, input, select, fragment, opt, eventName, isSupported, i,
 					div = document.createElement("div");
 
 				// Setup
+				// 创建测试用例
 				div.setAttribute("className", "t");
 				div.innerHTML = "  <link/><table></table><a href='/a'>a</a><input type='checkbox'/>";
 
 				// Finish early in limited (non-browser) environments
+				// 在非浏览器环境提前结束
 				all = div.getElementsByTagName("*") || [];
 				a = div.getElementsByTagName("a")[0];
 				if (!a || !a.style || !all.length) {
@@ -4247,6 +4252,7 @@
 				}
 
 				// First batch of tests
+				// 第一批次测试
 				select = document.createElement("select");
 				opt = select.appendChild(document.createElement("option"));
 				input = div.getElementsByTagName("input")[0];
@@ -4257,48 +4263,64 @@
 				support.getSetAttribute = div.className !== "t";
 
 				// IE strips leading whitespace when .innerHTML is used
+				// IE678 的 childNodes 不包含空白文本节点，firstChild 同理
+				// nodeType = 3 --- Text
 				support.leadingWhitespace = div.firstChild.nodeType === 3;
 
 				// Make sure that tbody elements aren't automatically inserted
 				// IE will insert them into empty tables
+				// 空 table，IE 会自动生成 tbody，而标准浏览器不会(标准浏览器如果有 tr 存在，也会自动生成 tbody )
 				support.tbody = !div.getElementsByTagName("tbody").length;
 
 				// Make sure that link elements get serialized correctly by innerHTML
 				// This requires a wrapper element in IE
+				// IE678 无法通过 div.innerHTML = '<link />';来插入 link
 				support.htmlSerialize = !!div.getElementsByTagName("link").length;
 
 				// Get the style information from getAttribute
 				// (IE uses .cssText instead)
+				// IE67 无法用 getAttribute 获取 style ，返回 object ，
+				// 同理也无法用 setAttribute 设置 style
 				support.style = /top/.test(a.getAttribute("style"));
 
 				// Make sure that URLs aren't manipulated
 				// (IE normalizes it by default)
+				// getAttribute 获取 href 的问题，
+				// 详见http://www.cnblogs.com/littledu/articles/2710234.html
 				support.hrefNormalized = a.getAttribute("href") === "/a";
 
 				// Make sure that element opacity exists
 				// (IE uses filter instead)
 				// Use a regex to work around a WebKit issue. See #5145
+				// 确定 opacity 属性是否存在，IE678 是通过 filter 滤镜来支持透明度
 				support.opacity = /^0.5/.test(a.style.opacity);
 
 				// Verify style float existence
 				// (IE uses styleFloat instead of cssFloat)
+				// IE678 通过 styleFloat 来获取 float，而标准浏览器用 cssFloat
 				support.cssFloat = !!a.style.cssFloat;
 
 				// Check the default checkbox/radio value ("" on WebKit; "on" elsewhere)
+				// checkbox 的默认值是否为 'on' 的测试
 				support.checkOn = !!input.value;
 
 				// Make sure that a selected-by-default option has a working selected property.
 				// (WebKit defaults to false instead of true, IE too, if it's in an optgroup)
+				// IE 中，第一个 option 默认不被选中，包括 IE9 依然如此，其他则选中
 				support.optSelected = opt.selected;
 
 				// Tests for enctype support on a form (#6743)
+				// 测试 form 是否支持 enctype
+				// enctype 属性规定在发送到服务器之前应该如何对表单数据进行编码
 				support.enctype = !!document.createElement("form").enctype;
 
 				// Makes sure cloning an html5 element does not cause problems
 				// Where outerHTML is undefined, this still works
+				// IE6 在克隆 HTML5 的新标签元素时 outerHTML 有":"
 				support.html5Clone = document.createElement("nav").cloneNode(true).outerHTML !== "<:nav></:nav>";
 
 				// Will be defined later
+				// 初始化定义，下面进行测试及修改
 				support.inlineBlockNeedsLayout = false;
 				support.shrinkWrapBlocks = false;
 				support.pixelPosition = false;
@@ -4308,15 +4330,18 @@
 				support.boxSizingReliable = true;
 
 				// Make sure checked status is properly cloned
+				// IE6789 , checked 不能被拷贝
 				input.checked = true;
 				support.noCloneChecked = input.cloneNode(true).checked;
 
 				// Make sure that the options inside disabled selects aren't marked as disabled
 				// (WebKit marks them as disabled)
+				// chrome23 已修复
 				select.disabled = true;
 				support.optDisabled = !opt.disabled;
 
 				// Support: IE<9
+				// IE678 不能 delete 节点上的属性
 				try {
 					delete div.test;
 				} catch (e) {
@@ -4324,11 +4349,13 @@
 				}
 
 				// Check if we can trust getAttribute("value")
+				// getAttribute 检测
 				input = document.createElement("input");
 				input.setAttribute("value", "");
 				support.input = input.getAttribute("value") === "";
 
 				// Check if an input maintains its value after becoming a radio
+				// IE下，input 被更换类型后，无法保持前一个类型所设的值
 				input.value = "t";
 				input.setAttribute("type", "radio");
 				support.radioValue = input.value === "t";
@@ -4337,6 +4364,7 @@
 				input.setAttribute("checked", "t");
 				input.setAttribute("name", "t");
 
+				// createdocumentfragment() 方法创建了一虚拟的节点对象，节点对象包含所有属性和方法。
 				fragment = document.createDocumentFragment();
 				fragment.appendChild(input);
 
@@ -4345,53 +4373,71 @@
 				support.appendChecked = input.checked;
 
 				// WebKit doesn't clone checked state correctly in fragments
+				// 检查 fragment 中的 checkbox 的选中状态是否能被复制
+				// 这段代码创建了一个 fragment ，并将一个处于选中状态的 checkbox 加入，连续复制两遍后检查 checkbox 是否为选中状态。
 				support.checkClone = fragment.cloneNode(true).cloneNode(true).lastChild.checked;
 
 				// Support: IE<9
 				// Opera does not clone events (and typeof div.attachEvent === undefined).
 				// IE9-10 clones events bound via attachEvent, but they don't trigger with .click()
+				// 检查复制 DOM Element 时是否会连同 event 一起复制，会则为 false ， 不会则为true
+				// IE 中为 false ， FireFox 中为 true
 				if (div.attachEvent) {
+					// 首先在 support 中增加属性 noCloneEvent ， 默认值为 true (在上面 Will be defined later 中定义)
 					div.attachEvent("onclick", function() {
 						support.noCloneEvent = false;
 					});
-
+					// 然后复制 div， 并触发其 “onclick” 事件，触发成功则为将 noCloneEvent 设为 false
 					div.cloneNode(true).click();
 				}
 
 				// Support: IE<9 (lack submit/change bubble), Firefox 17+ (lack focusin event)
 				// Beware of CSP restrictions (https://developer.mozilla.org/en/Security/CSP)
+				// submitBubbles, changeBubbles, focusinBubbles
+				// 检查 submit、change、focus 事件是否在“冒泡阶段”触发
+				// 实际上只针对 IE 进行检查。因为大多数浏览器（及IE9）使用 addEventListener 附加事件，函数的第三个参数 useCapture （是否在“捕捉阶段”触发事件）既可以为 false ，也可以为 true 
+				//  而 IE （IE9之前）使用 attachEvent 函数附加事件，该函数无法指定在哪个阶段触发事件，一律都为“冒泡阶段”触发
 				for (i in {
 						submit: true,
 						change: true,
 						focusin: true
 					}) {
+					// 通过 setAttribute(eventName, xxx)进行设置
 					div.setAttribute(eventName = "on" + i, "t");
-
+					// 通过设置的属性（onXXX）存在，可以的话就判断为“冒泡阶段”触发（即只要支持该事件，就判断为“冒泡阶段”触发）
 					support[i + "Bubbles"] = eventName in window || div.attributes[eventName].expando === false;
 				}
 
+				// 克隆出来的div应该不影响原 div, IE678 则会受到影响变为 “” ，等于false
 				div.style.backgroundClip = "content-box";
 				div.cloneNode(true).style.backgroundClip = "";
 				support.clearCloneStyle = div.style.backgroundClip === "content-box";
 
 				// Support: IE<9
 				// Iteration over object's inherited properties before its own.
+				// 我们知道正常的 for..in.. 循环，首先是从一个对象的实例属性开始的，然后再循环 prototype 中的属性。
+				// 但是在 IE9 之前的版本中，这个刚好是反过来的。
+				// 所以在这里，jQuery(support) 返回的对象中，第一个 i 应该是 0 ，但是在IE中的是 'andSelf' ，这是 jQuery 中 prototype 里的最后一个属性，
+				// 所以最后用 i 与 0 比较，确定 for..in.. 顺序。
 				for (i in jQuery(support)) {
 					break;
 				}
 				support.ownLast = i !== "0";
 
 				// Run tests that need a body at doc ready
+				// 运行测试，and 需要 doc ready 环境
 				jQuery(function() {
 					var container, marginDiv, tds,
 						divReset = "padding:0;margin:0;border:0;display:block;box-sizing:content-box;-moz-box-sizing:content-box;-webkit-box-sizing:content-box;",
 						body = document.getElementsByTagName("body")[0];
 
+					// 不存在 body 标签直接返回	
 					if (!body) {
 						// Return for frameset docs that don't have a body
 						return;
 					}
 
+					// 创建测试用例
 					container = document.createElement("div");
 					container.style.cssText = "border:0;width:0;height:0;position:absolute;top:0;left:-9999px;margin-top:1px";
 
@@ -4414,10 +4460,15 @@
 
 					// Support: IE8
 					// Check if empty table cells still have offsetWidth/Height
+					// 空 table 是否仍然存在 offsetWidth/Height （IE8）
 					support.reliableHiddenOffsets = isSupported && (tds[0].offsetHeight === 0);
 
 					// Check box-sizing and margin behavior.
 					div.innerHTML = "";
+					// 注意这里设置了一些样式 box-sizing:border-box;padding:1px;border:1px;display:block;width:4px;
+					// border-box -- 这是IE 怪异模式（Quirks mode）使用的 盒模型。
+					// width 与 height 包括内边距（padding）与边框（border），不包括外边距（margin）
+					// width = border + padding + 内容的宽度，height = border + padding + 内容的高度
 					div.style.cssText = "box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;padding:1px;border:1px;display:block;width:4px;margin-top:1%;position:absolute;top:1%;";
 
 					// Workaround failing boxSizing test due to offsetWidth returning wrong value
@@ -4425,12 +4476,18 @@
 					jQuery.swap(body, body.style.zoom != null ? {
 						zoom: 1
 					} : {}, function() {
+						// 当 offsetWidth 为 4 ，说明不包括内边距（padding）与边框（border），不支持 boxSizing
 						support.boxSizing = div.offsetWidth === 4;
 					});
 
 					// Use window.getComputedStyle because jsdom on node.js will break without it.
+					// window.getComputedStyle -- 方法得出所有在应用有效的样式和分解任何可能会包含值的基础计算后的元素的CSS属性值
+					// jQuery 的 CSS() 方法，其底层运作就应用了 getComputedStyle 以及 getPropertyValue 方法
+					// https://developer.mozilla.org/zh-CN/docs/Web/API/Window/getComputedStyle
 					if (window.getComputedStyle) {
+						// safari 下返回 1%，因此等于 false ，而其他浏览器会转换成相应的像素值
 						support.pixelPosition = (window.getComputedStyle(div, null) || {}).top !== "1%";
+						// IE 下，如果是怪异模式，width 不等于 4px，需要减去 padding，border
 						support.boxSizingReliable = (window.getComputedStyle(div, null) || {
 							width: "4px"
 						}).width === "4px";
@@ -4444,6 +4501,9 @@
 						marginDiv.style.marginRight = marginDiv.style.width = "0";
 						div.style.width = "1px";
 
+						// 检查 Margin Right 的计算是否可靠。 各浏览器中都为 true
+						// 上面注释中提到某些老版本的 Webkit 内核的浏览器中为 false
+						// 简单地说，就是将 width 和 marginRight 设为 0 时，获取的 marginRignt 应为 0
 						support.reliableMarginRight = !parseFloat((window.getComputedStyle(marginDiv, null) || {}).marginRight);
 					}
 
@@ -4454,6 +4514,10 @@
 						// them layout
 						div.innerHTML = "";
 						div.style.cssText = divReset + "width:1px;padding:1px;display:inline;zoom:1";
+						
+						// inlineBlockNeedsLayout 表示将原本 display 为 block 的 DOM Element 设置为 disylay: inline 时
+						// 是否与 inline 形式的 DOM Element 一致（ offsetWidth 为 2 ）
+						// IE8 及之前的浏览器中为 true ， FireFox 中为 false
 						support.inlineBlockNeedsLayout = (div.offsetWidth === 3);
 
 						// Support: IE6
@@ -4461,6 +4525,9 @@
 						div.style.display = "block";
 						div.innerHTML = "<div></div>";
 						div.firstChild.style.width = "5px";
+
+						// shrinkWrapBlocks 表示内部 DOM Element 的样式是否会影响外部 DOM Element 的样式
+						// IE 6 中为 true ， 多数浏览器中为 false
 						support.shrinkWrapBlocks = (div.offsetWidth !== 3);
 
 						if (support.inlineBlockNeedsLayout) {
@@ -4471,18 +4538,23 @@
 						}
 					}
 
+					// 销毁测试用例
 					body.removeChild(container);
 
 					// Null elements to avoid leaks in IE
+					// 在 $(function(){})闭包内部，释放内存，防止内存泄漏
 					container = div = tds = marginDiv = null;
 				});
 
 				// Null elements to avoid leaks in IE
+				// 释放内存，防止内存泄漏
 				all = select = fragment = opt = a = input = null;
 
+				// 返回 support 对象
 				return support;
 			})({});
 
+			// 
 			var rbrace = /(?:\{[\s\S]*\}|\[[\s\S]*\])$/,
 				rmultiDash = /([A-Z])/g;
 
