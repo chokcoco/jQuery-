@@ -42,3 +42,5 @@
 
 #### $.data -- 数据存储
 [jQuery数据缓存$.data 的使用以及源码解析](https://segmentfault.com/a/1190000000626031)
+
+[jQ的数据管理](http://www.html-js.com/article/cainiaojiedujQ-jQdishujuguanlizhongpian)
