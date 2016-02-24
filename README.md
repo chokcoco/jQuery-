@@ -38,3 +38,5 @@
 
 [jQuery.support 的实现方式](http://xxing22657-yahoo-com-cn.iteye.com/blog/1044984)
 
+#### $.data -- 数据存储
+[jQuery数据缓存$.data 的使用以及源码解析](https://segmentfault.com/a/1190000000626031)
