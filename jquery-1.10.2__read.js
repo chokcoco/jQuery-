@@ -545,6 +545,7 @@
 		jQuery.extend({
 				// Unique for each copy of jQuery on the page
 				// Non-digits removed to match rinlinejQuery
+				// 产生jQuery随机数 类似于： "jQuery044958585570566356"
 				expando: "jQuery" + (core_version + Math.random()).replace(/\D/g, ""),
 
 				// noConflict() 方法让出变量 $ 的 jQuery 控制权，这样其他脚本就可以使用它了
@@ -865,6 +866,9 @@
 
 				// Convert dashed to camelCase; used by the css and data modules
 				// Microsoft forgot to hump their vendor prefix (#9572)
+				// 驼峰表示法 例如将 font-size 变为 fontSize
+				// 在很多需要兼容 IE 的地方用得上，例如 IE678 获取 CSS 样式的时候，使用
+				// element.currentStyle.getAttribute(camelCase(style)) 传入的参数必须是驼峰表示法
 				camelCase: function(string) {
 					return string.replace(rmsPrefix, "ms-").replace(rdashAlpha, fcamelCase);
 				},
@@ -1112,6 +1116,7 @@
 						},
 
 						// A global GUID counter for objects
+						// 一个全局的计数器
 						guid: 1,
 
 						// Bind a function to a context, optionally partially applying any
@@ -4260,6 +4265,9 @@
 				a.style.cssText = "top:1px;float:left;opacity:.5";
 
 				// Test setAttribute on camelCase class. If it works, we need attrFixes when doing get/setAttribute (ie6/7)
+				// 测试 setAttribute 是否需要传入驼峰表示法的参数
+				// 在 IE67 中要获得单个属性的值，就必须将属性名转为驼峰形式
+				// element.currentStyle.getAttribute(camelCase(style)) -- http://www.cnblogs.com/coco1s/p/5210667.html
 				support.getSetAttribute = div.className !== "t";
 
 				// IE strips leading whitespace when .innerHTML is used
@@ -4554,49 +4562,77 @@
 				return support;
 			})({});
 
-			// 
+			// 匹配 {任意字符*} 或者 [任意字符*]
 			var rbrace = /(?:\{[\s\S]*\}|\[[\s\S]*\])$/,
+				// 匹配大写字母
 				rmultiDash = /([A-Z])/g;
 
+			// 数据存取方法	（pvt 表示此方法仅在内部使用）
 			function internalData(elem, name, data, pvt /* Internal Use Only */ ) {
+				// 检查 elem 元素是否可以设置数据
 				if (!jQuery.acceptData(elem)) {
+					// 如果参数 elem 不支持设置数据，则立即返回
 					return;
 				}
 
 				var ret, thisCache,
+					// 产生jQuery键值随机数 类似于： "11020056177454302087426"
+					// expando.jQuery = (core_version + Math.random()).replace(/\D/g, "");
+					// (core_version + Math.random()) 产生一串随机字符串 "1.10.20.6013481540139765" 
+					// replace(/\D/g, "") 去掉非数字
 					internalKey = jQuery.expando,
 
 					// We have to handle DOM nodes and JS objects differently because IE6-7
 					// can't GC object references properly across the DOM-JS boundary
+					// 元素的 nodeType
 					isNode = elem.nodeType,
 
 					// Only DOM nodes need the global jQuery cache; JS object data is
 					// attached directly to the object so GC can occur automatically
+					// 只有 DOM 元素需要全局的 jQuery 缓存 cache，
+					// 而如果是 JS 对象，则直接将数据保存在这个对象上 
 					cache = isNode ? jQuery.cache : elem,
 
 					// Only defining an ID for JS objects if its cache already exists allows
 					// the code to shortcut on the same path as a DOM node with no cache
+					// 添加的对象的 key 值，根据元素 elem 的 nodeType 判断
+					// 如果是 Dom 元素，为 elem[internalKey]
+					// 如果是 JS 对象，elem[internalKey] 存在则使用 internalKey ，反之，为 elem[internalKey]
 					id = isNode ? elem[internalKey] : elem[internalKey] && internalKey;
+					// 可以看到，上面的 cache 和 id 都是要根据 elem 的类型去判断
+					// 而 internalData 方法，是适用于对 DOM（doc.getElementById类型）元素 和 JS（var obj={}）对象的
 
+
+				
 				// Avoid doing any more work than we need to when trying to get data on an
 				// object that has no data at all
+				// 如果是读取数据，且没有数据，则返回
 				if ((!id || !cache[id] || (!pvt && !cache[id].data)) && data === undefined && typeof name === "string") {
 					return;
 				}
 
+				// 如果 id 不存在的时候
 				if (!id) {
 					// Only DOM nodes need a new unique ID for each element since their data
 					// ends up in the global cache
+					// 只有当 elem 是 DOM 结点的时候，需要添加一个唯一的 ID
 					if (isNode) {
+						// jQuery.guid 全局计数器
+						// 对于 DOM 结点，jQuery.uuid 会自加 1，并附加到 DOM 元素上
 						id = elem[internalKey] = core_deletedIds.pop() || jQuery.guid++;
+					// 不是 DOM 结点，是 JS 对象的话直接使用 internalKey
 					} else {
 						id = internalKey;
 					}
 				}
 
+				// 如果 cache[id] 不存在
 				if (!cache[id]) {
 					// Avoid exposing jQuery metadata on plain JS objects when the object
 					// is serialized using JSON.stringify
+					// 对于 DOM 如果数据缓存对象不存在，则初始化为空对象 {}
+					// 对于 JS 对象，设置方法 toJSON 为空函数，以避免在执行 JSON.stringify() 时暴露缓存数据
+					// 如果一个对象定义了方法 toJSON(), JSON.stringify() 在序列化该对象时会调用这个方法来生成该对象的 JSON 元素
 					cache[id] = isNode ? {} : {
 						toJSON: jQuery.noop
 					};
@@ -4604,19 +4640,28 @@
 
 				// An object can be passed to jQuery.data instead of a key/value pair; this gets
 				// shallow copied over onto the existing cache
+				// 如果参数 name 是对象或函数，则批量设置数据
 				if (typeof name === "object" || typeof name === "function") {
+					// pvt 表示方法使用于内部
 					if (pvt) {
+						// 对于内部数据，把参数 name 中的属性合并到 cache[id] 中
 						cache[id] = jQuery.extend(cache[id], name);
 					} else {
+						// 对于自定义数据，把参数 name 中的属性合并到 cache[id].data 中
 						cache[id].data = jQuery.extend(cache[id].data, name);
 					}
 				}
 
+				// 这是缓存后的数据
 				thisCache = cache[id];
 
 				// jQuery data() is stored in a separate object inside the object's internal data
 				// cache in order to avoid key collisions between internal data and user-defined
-				// data.
+				// jQuery 库会使用 jQuery.data 方法存储一些内部使用的数据，比如 queue 队列，on 事件绑定等等，这些方法都需要存储空间来存储数据
+				// 为了区分内部使用的数据和用户定义的数据，jQuery 将内部使用的数据直接存储在 cache[id] 里面，而用户定义的数据则存储在 cache[id].data 中
+				// 如果是自定义数据 则将 thisCache 变量指向到 .data 对象中,如果为空则创建一个空对象
+				// 这里是个重点，很简单的代码，这里改变了将数据存储的位置
+				// 而且这里存储的位置影响到后文 internalRemoveData remove 的位置
 				if (!pvt) {
 					if (!thisCache.data) {
 						thisCache.data = {};
@@ -4625,70 +4670,101 @@
 					thisCache = thisCache.data;
 				}
 
+				// 如果 data 不为空，设置键值对 key - value
 				if (data !== undefined) {
+					// camelCase 驼峰表示法
 					thisCache[jQuery.camelCase(name)] = data;
 				}
 
 				// Check for both converted-to-camel and non-converted data property names
 				// If a data property was specified
+				// 如果参数 name 是 "string" 类型，则读取单个数据
+				// 就是获取返回值了 internalData(elem,'key')
 				if (typeof name === "string") {
 
 					// First Try to find as-is property data
+					// 先尝试读取参数 name 对应的数据
 					ret = thisCache[name];
 
 					// Test for null|undefined property data
+					// 如果未取到，则把参数 name 转换为驼峰式再次尝试读取对应的数据
 					if (ret == null) {
 
 						// Try to find the camelCased property
+						// camelCased -- 将 name 变为驼峰表示法
 						ret = thisCache[jQuery.camelCase(name)];
 					}
 				} else {
+					// 如果未传入参数 name , data ,则返回数据缓存对象
 					ret = thisCache;
 				}
 
+				// 返回 ret 对象
 				return ret;
 			}
 
+			// 数据对象的移除
 			function internalRemoveData(elem, name, pvt) {
+				// 检查 elem 元素是否可以设置数据，同上
 				if (!jQuery.acceptData(elem)) {
 					return;
 				}
 
 				var thisCache, i,
+					// 元素的 nodeType
 					isNode = elem.nodeType,
 
 					// See jQuery.data for more information
+					// 只有 DOM 元素需要全局的 jQuery 缓存 cache，
+					// 而如果是 JS 对象，则直接将数据保存在这个对象上 
 					cache = isNode ? jQuery.cache : elem,
+
+				  // 添加的对象的 key 值，根据元素 elem 的 nodeType 判断
+					// 如果是 Dom 元素，为 elem[internalKey]
+					// 如果是 JS 对象，elem[internalKey] 存在则使用 internalKey ，反之，为 elem[internalKey]
 					id = isNode ? elem[jQuery.expando] : jQuery.expando;
 
 				// If there is already no cache entry for this object, there is no
 				// purpose in continuing
+				// 如果没有数据那也就不用删除了
 				if (!cache[id]) {
 					return;
 				}
 
+				// cache[id] != false 
+				// 有数据存在
 				if (name) {
 
+					// 缓存的位置，指向私有对象还是指向用户自定义的 data
 					thisCache = pvt ? cache[id] : cache[id].data;
 
+					// 有数据
 					if (thisCache) {
 
 						// Support array or space separated string names for data keys
+						// 非数组
 						if (!jQuery.isArray(name)) {
 
 							// try the string as a key before any manipulation
+							// 不是数组的话 则单独进行匹配删除
 							if (name in thisCache) {
 								name = [name];
 							} else {
 
 								// split the camel cased version by spaces unless a key with the spaces exists
+								// 进行一次驼峰命名转换
 								name = jQuery.camelCase(name);
+
+								// 如果进行了驼峰命名转换的 name 存在于 thisCache中
 								if (name in thisCache) {
+									// 转化为数组形式
 									name = [name];
 								} else {
+									// 没找到，使用空格分隔 name，也是转化为数组形式
 									name = name.split(" ");
 								}
 							}
+						// 如果是数组	
 						} else {
 							// If "name" is an array of keys...
 							// When data is initially created, via ("key", "val") signature,
@@ -4699,6 +4775,10 @@
 							name = name.concat(jQuery.map(name, jQuery.camelCase));
 						}
 
+				    // 经过上面的处理我们看到 jQ 兼容了很多形式上的参数
+            // [key1,key2] "key1 key2" "key1" "key1-name"
+            // 上边的一顿整理，到了这里都是一个数组，执行删除操作
+						// 遍历删除
 						i = name.length;
 						while (i--) {
 							delete thisCache[name[i]];
@@ -4706,24 +4786,39 @@
 
 						// If there is no data left in the cache, we want to continue
 						// and let the cache object itself get destroyed
+						// isEmptyDataObject 检测的是 JS 数据对象是否为空
+						// isEmptyObject 检测一个普通对象是否是空对象
+						// 如果数据对象中还有剩余数据则函数执行完毕，return 返回
 						if (pvt ? !isEmptyDataObject(thisCache) : !jQuery.isEmptyObject(thisCache)) {
 							return;
 						}
 					}
 				}
 
+        // 代码执行到这里的时候有两种情况：
+        // 1.没有传name参数，意味着要删除所有数据
+        // 2.按照传递的name参数删除后,没有数据了
 				// See jQuery.data for more information
+				// 如果是来删除自定义的数据
 				if (!pvt) {
+					//删除 cache[id].data
 					delete cache[id].data;
 
 					// Don't destroy the parent cache unless the internal data object
 					// had been the only thing left in it
+					// 删除后检测到数据缓存对象还有剩余数据则返回
 					if (!isEmptyDataObject(cache[id])) {
 						return;
 					}
 				}
 
+        // 代码执行到这里时：
+        // 1.删除的是系统级别数据, 
+        // 2.已经清空完了用户的缓存数据,而且数据缓存对象还不是空的时候
+
 				// Destroy the cache
+				// 销毁缓存
+				// 该对象是dom元素
 				if (isNode) {
 					jQuery.cleanData([elem], true);
 
@@ -4735,6 +4830,7 @@
 
 					// When all else fails, null
 				} else {
+					// 其他手段都失败了，将 cache[id] 置为 null
 					cache[id] = null;
 				}
 			}
@@ -4878,6 +4974,7 @@
 			}
 
 			// checks a cache object for emptiness
+			// 检查数据缓存对象是否为空
 			function isEmptyDataObject(obj) {
 				var name;
 				for (name in obj) {
@@ -7993,6 +8090,7 @@
 				// Get and set the style property on a DOM Node
 				style: function(elem, name, value, extra) {
 					// Don't set styles on text and comment nodes
+					// 异常判断
 					if (!elem || elem.nodeType === 3 || elem.nodeType === 8 || !elem.style) {
 						return;
 					}
@@ -8467,6 +8565,7 @@
 					jQuery.cssHooks[prefix + suffix].set = setPositiveNumber;
 				}
 			});
+
 			var r20 = /%20/g,
 				rbracket = /\[\]$/,
 				rCRLF = /\r?\n/g,
