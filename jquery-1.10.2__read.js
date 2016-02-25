@@ -27,8 +27,8 @@
 		// Support: Firefox 18+
 		//"use strict";
 		var
-			// The deferred used on DOM ready
-			// 一个用在 DOM ready 上的回调函数处理变量
+		// The deferred used on DOM ready
+		// 一个用在 DOM ready 上的回调函数处理变量
 			readyList,
 
 			// A central reference to the root jQuery(document)
@@ -3350,7 +3350,8 @@
 							// Add elements passing elementMatchers directly to results
 							// Keep `i` a string if there are no elements so `matchedCount` will be "00" below
 							// 开始遍历 seed 种子合集了
-							for (;(elem = elems[i]) != null; i++) {
+							for (;
+								(elem = elems[i]) != null; i++) {
 								if (byElement && elem) {
 									j = 0;
 									while ((matcher = elementMatchers[j++])) {
@@ -3718,9 +3719,9 @@
 					// 可以传递对象：{once:true, memory:true}
 					jQuery.extend({}, options);
 
-				var 
-					// Flag to know if list is currently firing
-					// 列表中的函数是否正在回调中
+				var
+				// Flag to know if list is currently firing
+				// 列表中的函数是否正在回调中
 					firing,
 					// Last fire value (for non-forgettable lists)
 					// 最后一次触发回调时传的参数
@@ -4052,7 +4053,7 @@
 													.done(newDefer.resolve)
 													.fail(newDefer.reject)
 													.progress(newDefer.notify);
-											// 如果回调返回的是不是一个 Deferred 实例，则被当做 args 由 XXXWith 派发出去		
+												// 如果回调返回的是不是一个 Deferred 实例，则被当做 args 由 XXXWith 派发出去		
 											} else {
 												newDefer[action + "With"](this === promise ? newDefer.promise() : this, fn ? [returned] : arguments);
 											}
@@ -4103,19 +4104,19 @@
 						if (stateString) {
 
 							list.add(function() {
-								// state = [ resolved | rejected ]
-								// 修改最终状态
-								state = stateString;
+									// state = [ resolved | rejected ]
+									// 修改最终状态
+									state = stateString;
 
-								// [ reject_list | resolve_list ].disable; progress_list.lock
-								// 这里用到了 disable ，即是禁用回调列表中的回调
-								// 禁用对立的那条队列
-         				// 注意 0^1 = 1   1^1 = 0
-         				// 即是成功的时候，把失败那条队列禁用
-         				// 即是成功的时候，把成功那条队列禁用
-							}, tuples[i ^ 1][2].disable, 
-							// 锁住当前队列状态
-							tuples[2][2].lock);
+									// [ reject_list | resolve_list ].disable; progress_list.lock
+									// 这里用到了 disable ，即是禁用回调列表中的回调
+									// 禁用对立的那条队列
+									// 注意 0^1 = 1   1^1 = 0
+									// 即是成功的时候，把失败那条队列禁用
+									// 即是成功的时候，把成功那条队列禁用
+								}, tuples[i ^ 1][2].disable,
+								// 锁住当前队列状态
+								tuples[2][2].lock);
 						}
 
 						// deferred[ resolve | reject | notify ]
@@ -4132,22 +4133,22 @@
 						deferred[tuple[0] + "With"] = list.fireWith;
 					});
 					// Make the deferred a promise
-  				// 这一步之前 promise 和 deferred 绑定了以下方法
-  				// deferred[ resolve | reject | notify ]
-  				// deferred[ resolveWith | rejectWith | notifyWith ]
-  				// promise[ done | fail | progress | then | always | state | promise ]
- 				
+					// 这一步之前 promise 和 deferred 绑定了以下方法
+					// deferred[ resolve | reject | notify ]
+					// deferred[ resolveWith | rejectWith | notifyWith ]
+					// promise[ done | fail | progress | then | always | state | promise ]
 
-  				// 合并内部辅助的 promise 的 promise 方法（jQ 同学坑爹，起同样名字）
-  				// 扩展 deferred 的 then | done | fail | progress 等方法
+
+					// 合并内部辅助的 promise 的 promise 方法（jQ 同学坑爹，起同样名字）
+					// 扩展 deferred 的 then | done | fail | progress 等方法
 					promise.promise(deferred);
 
 					// Call given func if any
-  				// $.Deferred(func)格式
-  				// $.Deferred() 可以接受一个函数名（注意，是函数名）作为参数，$.Deferred() 所生成的 deferred 对象将作为这个函数的默认参数
-  				// 例子: 
-  				// http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html
-  				// 并且把当前任务的上下文跟参数设置成当前生成的deferred实例
+					// $.Deferred(func)格式
+					// $.Deferred() 可以接受一个函数名（注意，是函数名）作为参数，$.Deferred() 所生成的 deferred 对象将作为这个函数的默认参数
+					// 例子: 
+					// http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html
+					// 并且把当前任务的上下文跟参数设置成当前生成的deferred实例
 					if (func) {
 						func.call(deferred, deferred);
 					}
@@ -4192,10 +4193,10 @@
 								// 处理中，派发正在处理事件
 								if (values === progressValues) {
 									deferred.notifyWith(contexts, values);
-								// 成功，并且最后剩余的异步任务为0了	
+									// 成功，并且最后剩余的异步任务为0了	
 								} else if (!(--remaining)) {
 									// 说明所有任务都成功了，派发成功事件出去
-          				// 事件包含的上下文是当前任务前边的所有任务的一个集合
+									// 事件包含的上下文是当前任务前边的所有任务的一个集合
 									deferred.resolveWith(contexts, values);
 								}
 							};
@@ -4205,7 +4206,7 @@
 
 					// add listeners to Deferred subordinates; treat others as resolved
 					// 如果只有一个任务，可以不用做维护状态的处理了
-  				// 只有大于1个任务才需要维护任务的状态
+					// 只有大于1个任务才需要维护任务的状态
 					if (length > 1) {
 						progressValues = new Array(length);
 						progressContexts = new Array(length);
@@ -4232,8 +4233,8 @@
 					// 如果你不传递任何参数，jQuery.when() 将返回一个 resolved（解决）状态的 promise 对象
 					return deferred.promise();
 				}
-			}); 
-			
+			});
+
 			// jQuery.support 属性包含表示不同浏览器特性或漏洞的属性集
 			// 需要注意的是，官网强烈建议浏览器功能性检测不要使用 jQuery.support 上的属性。而使用比如 Modernizr 这样的外部类库（http://www.css88.com/jqapi-1.9/jQuery.support/）
 			// example:
@@ -4522,7 +4523,7 @@
 						// them layout
 						div.innerHTML = "";
 						div.style.cssText = divReset + "width:1px;padding:1px;display:inline;zoom:1";
-						
+
 						// inlineBlockNeedsLayout 表示将原本 display 为 block 的 DOM Element 设置为 disylay: inline 时
 						// 是否与 inline 形式的 DOM Element 一致（ offsetWidth 为 2 ）
 						// IE8 及之前的浏览器中为 true ， FireFox 中为 false
@@ -4566,7 +4567,7 @@
 			// 下面一块是数据的存储
 			// $.data() , $().data()
 			// $.removeData() , $().removeData() 等
-			
+
 			// 匹配 {任意字符*} 或者 [任意字符*]
 			var rbrace = /(?:\{[\s\S]*\}|\[[\s\S]*\])$/,
 				// 匹配大写字母
@@ -4604,11 +4605,11 @@
 					// 如果是 Dom 元素，为 elem[internalKey]
 					// 如果是 JS 对象，elem[internalKey] 存在则使用 internalKey ，反之，为 elem[internalKey]
 					id = isNode ? elem[internalKey] : elem[internalKey] && internalKey;
-					// 可以看到，上面的 cache 和 id 都是要根据 elem 的类型去判断
-					// 而 internalData 方法，是适用于对 DOM（doc.getElementById类型）元素 和 JS（var obj={}）对象的
+				// 可以看到，上面的 cache 和 id 都是要根据 elem 的类型去判断
+				// 而 internalData 方法，是适用于对 DOM（doc.getElementById类型）元素 和 JS（var obj={}）对象的
 
 
-				
+
 				// Avoid doing any more work than we need to when trying to get data on an
 				// object that has no data at all
 				// 如果是读取数据，且没有数据，则返回
@@ -4625,7 +4626,7 @@
 						// jQuery.guid 全局计数器
 						// 对于 DOM 结点，jQuery.uuid 会自加 1，并附加到 DOM 元素上
 						id = elem[internalKey] = core_deletedIds.pop() || jQuery.guid++;
-					// 不是 DOM 结点，是 JS 对象的话直接使用 internalKey
+						// 不是 DOM 结点，是 JS 对象的话直接使用 internalKey
 					} else {
 						id = internalKey;
 					}
@@ -4724,7 +4725,7 @@
 					// 而如果是 JS 对象，则直接将数据保存在这个对象上 
 					cache = isNode ? jQuery.cache : elem,
 
-				  // 添加的对象的 key 值，根据元素 elem 的 nodeType 判断
+					// 添加的对象的 key 值，根据元素 elem 的 nodeType 判断
 					// 如果是 Dom 元素，为 elem[internalKey]
 					// 如果是 JS 对象，elem[internalKey] 存在则使用 internalKey ，反之，为 elem[internalKey]
 					id = isNode ? elem[jQuery.expando] : jQuery.expando;
@@ -4769,7 +4770,7 @@
 									name = name.split(" ");
 								}
 							}
-						// 如果是数组	
+							// 如果是数组	
 						} else {
 							// If "name" is an array of keys...
 							// When data is initially created, via ("key", "val") signature,
@@ -4780,9 +4781,9 @@
 							name = name.concat(jQuery.map(name, jQuery.camelCase));
 						}
 
-				    // 经过上面的处理我们看到 jQ 兼容了很多形式上的参数
-            // [key1,key2] "key1 key2" "key1" "key1-name"
-            // 上边的一顿整理，到了这里都是一个数组，执行删除操作
+						// 经过上面的处理我们看到 jQ 兼容了很多形式上的参数
+						// [key1,key2] "key1 key2" "key1" "key1-name"
+						// 上边的一顿整理，到了这里都是一个数组，执行删除操作
 						// 遍历删除
 						i = name.length;
 						while (i--) {
@@ -4800,9 +4801,9 @@
 					}
 				}
 
-        // 代码执行到这里的时候有两种情况：
-        // 1.没有传name参数，意味着要删除所有数据
-        // 2.按照传递的name参数删除后,没有数据了
+				// 代码执行到这里的时候有两种情况：
+				// 1.没有传name参数，意味着要删除所有数据
+				// 2.按照传递的name参数删除后,没有数据了
 				// See jQuery.data for more information
 				// 如果是来删除自定义的数据
 				if (!pvt) {
@@ -4817,9 +4818,9 @@
 					}
 				}
 
-        // 代码执行到这里时：
-        // 1.删除的是系统级别数据, 
-        // 2.已经清空完了用户的缓存数据,而且数据缓存对象还不是空的时候
+				// 代码执行到这里时：
+				// 1.删除的是系统级别数据, 
+				// 2.已经清空完了用户的缓存数据,而且数据缓存对象还不是空的时候
 
 				// Destroy the cache
 				// 销毁缓存
@@ -4848,8 +4849,8 @@
 				// The following elements throw uncatchable exceptions if you
 				// attempt to add expando properties to them.
 				// 如果你尝试给以下元素添加扩展属性,将抛出“无法捕捉”的异常
-    		// 这里声明的几个元素对象是不给于数据绑定的
-    		// applet、embed 和 object 元素是不支持设置 expando 属性的，所以不支持 data 方法
+				// 这里声明的几个元素对象是不给于数据绑定的
+				// applet、embed 和 object 元素是不支持设置 expando 属性的，所以不支持 data 方法
 				noData: {
 					"applet": true,
 					"embed": true,
@@ -4904,7 +4905,7 @@
 					return !noData || noData !== true && elem.getAttribute("classid") === noData;
 				}
 			});
-			
+
 			// 原型方法拓展
 			// 挂载在 jQuery.fn 下的方法是所有 jQuery 对象都能使用的
 			// 已经设置了 jQuery.data 为什么还要 jQuery.fn.data 呢
@@ -4999,7 +5000,7 @@
 					});
 				}
 			});
-	
+
 			// 这里函数是用来解析 elem 元素身上的 html 标签 "data-" 的值
 			// 如果传入的 data 对象有值的话,则直接返回不进行解析
 			function dataAttr(elem, key, data) {
@@ -5031,7 +5032,7 @@
 						// Make sure we set the data so it isn't changed later
 						jQuery.data(elem, key, data);
 
-					// 木有找到，赋值 undefined	
+						// 木有找到，赋值 undefined	
 					} else {
 						data = undefined;
 					}
