@@ -4562,6 +4562,11 @@
 				return support;
 			})({});
 
+
+			// 下面一块是数据的存储
+			// $.data() , $().data()
+			// $.removeData() , $().removeData() 等
+			
 			// 匹配 {任意字符*} 或者 [任意字符*]
 			var rbrace = /(?:\{[\s\S]*\}|\[[\s\S]*\])$/,
 				// 匹配大写字母
@@ -4835,11 +4840,16 @@
 				}
 			}
 
+			// 下面的就是一些 jQuery 涉及数据存储的操作
 			jQuery.extend({
+				// 全局的缓存对象
 				cache: {},
 
 				// The following elements throw uncatchable exceptions if you
 				// attempt to add expando properties to them.
+				// 如果你尝试给以下元素添加扩展属性,将抛出“无法捕捉”的异常
+    		// 这里声明的几个元素对象是不给于数据绑定的
+    		// applet、embed 和 object 元素是不支持设置 expando 属性的，所以不支持 data 方法
 				noData: {
 					"applet": true,
 					"embed": true,
@@ -4847,43 +4857,61 @@
 					"object": "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
 				},
 
+				// 检查对象是否已经存储了数据
 				hasData: function(elem) {
 					elem = elem.nodeType ? jQuery.cache[elem[jQuery.expando]] : elem[jQuery.expando];
 					return !!elem && !isEmptyDataObject(elem);
 				},
 
+				// 给 elem（可是DOM，可以是JS对象）添加 key-value 为 name-data 的数据
 				data: function(elem, name, data) {
 					return internalData(elem, name, data);
 				},
 
+				// 移除 elem（可是DOM，可以是JS对象）上
 				removeData: function(elem, name) {
 					return internalRemoveData(elem, name);
 				},
 
 				// For internal use only.
+				// 添加一个仅供内部使用的数据
 				_data: function(elem, name, data) {
 					return internalData(elem, name, data, true);
 				},
 
+				// 删除内部使用的数据数据
 				_removeData: function(elem, name) {
 					return internalRemoveData(elem, name, true);
 				},
 
 				// A method for determining if a DOM node can handle the data expando
+				// 检测一个属性是否可以绑定数据
+				// nodeType = 1 -- Element
+				// nodeType = 9 -- Document
 				acceptData: function(elem) {
 					// Do not set data on non-element because it will not be cleared (#8335).
+					// 
 					if (elem.nodeType && elem.nodeType !== 1 && elem.nodeType !== 9) {
 						return false;
 					}
 
+					// if(elem.nodeName){
+					//   noData = jQuery.noData[elem.nodeName.toLowerCase()];
+					// }
 					var noData = elem.nodeName && jQuery.noData[elem.nodeName.toLowerCase()];
 
 					// nodes accept data unless otherwise specified; rejection can be conditional
 					return !noData || noData !== true && elem.getAttribute("classid") === noData;
 				}
 			});
-
+			
+			// 原型方法拓展
+			// 挂载在 jQuery.fn 下的方法是所有 jQuery 对象都能使用的
+			// 已经设置了 jQuery.data 为什么还要 jQuery.fn.data 呢
+			// 因为 jQuery 的多样性，处理数据存储可以有如下两种方式：
+			// $.data(divElement,'name','value') 或者是 $(divElement).data('name','value')
 			jQuery.fn.extend({
+				// 设置、读取自定义数据，解析HTML5属性data-
 				data: function(key, value) {
 					var attrs, name,
 						data = null,
@@ -4894,18 +4922,30 @@
 					// so implement the relevant behavior ourselves
 
 					// Gets all values
+					// 未传入参数的情况
 					if (key === undefined) {
+						// 如果参数 key 是 undefined , 即参数格式是.data(), 
+						// 则调用方法 jQuery.data(elem, name, data) 获取第一个匹配元素关联的自定义数据缓存对象，并返回
+						// 这里的 this 指代的是调用 .data() 的对象
 						if (this.length) {
 							data = jQuery.data(elem);
 
+							// 如果是 DOM 元素
 							if (elem.nodeType === 1 && !jQuery._data(elem, "parsedAttrs")) {
+								// 拿到 dom 元素的属性列表
 								attrs = elem.attributes;
+								// 遍历
 								for (; i < attrs.length; i++) {
+									// name为属性名
 									name = attrs[i].name;
 
+									// 先尝试是否有命名为 data-xxxx 的数据  
 									if (name.indexOf("data-") === 0) {
+										// 取 data-xxxx 后面的 xxxx，即是
+										// <div data-idName="123"></div> 取其属性 "data-idName" 其中的 idName
 										name = jQuery.camelCase(name.slice(5));
 
+										// 通过 dataAttr 解析 elem 元素身上的 html 标签 "data-" 的值
 										dataAttr(elem, name, data[name]);
 									}
 								}
@@ -4916,41 +4956,67 @@
 						return data;
 					}
 
+					// 方法走到这里，说明传入了至少一个参数
+					// 下面分情况处理
+
 					// Sets multiple values
+					// 如果参数 key 是对象，批量设置 key-value 
+					// 
+					// $.data(divElement,{
+					//     'name': 'div',
+					//     'age': 19
+					// });
+					// 
 					if (typeof key === "object") {
 						return this.each(function() {
 							jQuery.data(this, key);
 						});
 					}
 
+
+					// 返回结果
 					return arguments.length > 1 ?
 
 						// Sets one value
+						// 参数大于一个，那么必然是设置 key-value
+						// 设置单个 key
 						this.each(function() {
 							jQuery.data(this, key, value);
 						}) :
 
 						// Gets one value
+						// 参数为一个，那么就是获取数据 key
 						// Try to fetch any internally stored data first
+						// 首先应该尝试内部 jQuery.data 是有值，再解析 elem 元素身上的 html 标签 "data-" 的值
+						// 因为 dataAttr(elem, key, data) 里，如果 data !== undefined 是直接返回 data的
 						elem ? dataAttr(elem, key, jQuery.data(elem, key)) : null;
 				},
 
+				// 移除自定义数据
 				removeData: function(key) {
 					return this.each(function() {
 						jQuery.removeData(this, key);
 					});
 				}
 			});
-
+	
+			// 这里函数是用来解析 elem 元素身上的 html 标签 "data-" 的值
+			// 如果传入的 data 对象有值的话,则直接返回不进行解析
 			function dataAttr(elem, key, data) {
 				// If nothing was found internally, try to fetch any
 				// data from the HTML5 data-* attribute
+				// 如果传入的 data 为空且 elem 是 DOM 元素
 				if (data === undefined && elem.nodeType === 1) {
 
+					// rmultiDash = /([A-Z])/g -- 匹配大写字母
+					// key.replace(rmultiDash, "-$1").toLowerCase() 的意思是将驼峰表示法转化为斜杠表示，即 fontSzie --> font-size
+					// 键名转换，这里的意思是将传入的 name 统一转化为 data-xxx-xxx 的形式
 					var name = "data-" + key.replace(rmultiDash, "-$1").toLowerCase();
 
+					// 查找是否有该属性
 					data = elem.getAttribute(name);
 
+					// 找到了，且类型是 String 
 					if (typeof data === "string") {
 						try {
 							data = data === "true" ? true :
@@ -4965,11 +5031,13 @@
 						// Make sure we set the data so it isn't changed later
 						jQuery.data(elem, key, data);
 
+					// 木有找到，赋值 undefined	
 					} else {
 						data = undefined;
 					}
 				}
 
+				// 返回结果
 				return data;
 			}
 
@@ -4990,6 +5058,9 @@
 
 				return true;
 			}
+			// $.data() $().data() 结束
+			// --------------------------------
+
 			jQuery.extend({
 				queue: function(elem, type, data) {
 					var queue;
@@ -10942,5 +11013,3 @@
 				}
 			}
 		})(window);
-
-		
