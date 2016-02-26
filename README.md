@@ -22,6 +22,8 @@
 
 [jQuery的deferred对象详解](http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html)
 
+[妙味课堂：一起学习jQuery源码](http://bbs.miaov.com/forum.php?mod=viewthread&tid=7385)
+
 
 ## 工具类分析
 [jQuery API](https://oscarotero.com/jquery/)
@@ -44,3 +46,6 @@
 [jQuery数据缓存$.data 的使用以及源码解析](https://segmentfault.com/a/1190000000626031)
 
 [jQ的数据管理](http://www.html-js.com/article/cainiaojiedujQ-jQdishujuguanlizhongpian)
+
+## License
+MIT
