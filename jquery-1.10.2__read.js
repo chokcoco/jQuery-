@@ -110,9 +110,17 @@
 			},
 
 			// Used for matching numbers
+			// 匹配数字
+			// 第一个分组 (?:\d*\.|) 匹配 数字后面接一个小数点. 例如 123. 456. 或者空（注意正则最后的|）
+			// 第二个分组 (?:[eE][+-]?\d+|) 匹配 e+10 或者 E-10 这样的指数表达式 或空
+			// 需要注意的是 [+-]? 表示可匹配 +- 0 次或者 1 次，
+			// (?:\d*\.|) 可匹配空
+			// (?:[eE][+-]?\d+|) 可匹配空
+			// 所以这个正则表达式的核心匹配是 /\d+/ 匹配数字一次或者多次
 			core_pnum = /[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/.source,
 
 			// Used for splitting on whitespace
+			// \S -- 匹配任意不是空白符的字符
 			core_rnotwhite = /\S+/g,
 
 			// Make sure we trim BOM and NBSP (here's looking at you, Safari 5.0 and IE)
@@ -142,10 +150,20 @@
 			rvalidtokens = /"[^"\\\r\n]*"|true|false|null|-?(?:\d+\.|)\d+(?:[eE][+-]?\d+|)/g,
 
 			// Matches dashed string for camelizing
+			// 匹配 -ms- 前缀
 			rmsPrefix = /^-ms-/,
+
+			// [\da-z] 表示任意英文字母或者数字
 			rdashAlpha = /-([\da-z])/gi,
 
 			// Used by jQuery.camelCase as callback to replace()
+			// 在 jQuery.camelCase() 中会用到
+			// 驼峰表示法，将 font-size 形式转化为 fontSize 
+			// function camelCase(string){
+			// 	return string.replace(/-([a-z])/g,function(all,letter){
+			// 		return letter.toUpperCase();
+			// 	})
+			// }
 			fcamelCase = function(all, letter) {
 				return letter.toUpperCase();
 			},
@@ -682,6 +700,8 @@
 				},
 
 				// 确定JavaScript 对象的类型
+				// 这个方法的关键之处在于 class2type[core_toString.call(obj)]
+				// 可以使得 typeof obj 为 "object" 类型的得到更进一步的精确判断
 				type: function(obj) {
 					// 如果传入的为 null --> $.type(null)
 					// "null"
@@ -988,11 +1008,12 @@
 
 				// results is for internal usage only
 				// 将类数组对象转换为数组对象
+				// 此方法为内部方法
 				makeArray: function(arr, results) {
 					var ret = results || [];
 
 					if (arr != null) {
-						// 如果arr是一个类数组对象，调用merge合到返回值
+						// 如果 arr 是一个类数组对象，调用 merge 合到返回值
 						if (isArraylike(Object(arr))) {
 							jQuery.merge(ret,
 								typeof arr === "string" ?
@@ -1000,7 +1021,7 @@
 							);
 						} else {
 							// 如果不是数组，则将其放到返回数组末尾
-							// 等同于ret.push(arr);
+							// 等同于 ret.push(arr);
 							core_push.call(ret, arr);
 						}
 					}
@@ -1324,8 +1345,8 @@
 
 				// Populate the class2type map
 			};
-			// typeof并不能区分出它是Array类型，jQuery为了扩展typeof的表达力，因此扩展了type方法
-			// 针对一些特殊的对象（例如null，window，RegExp）也进行精准的类型判断
+			// typeof 并不能区分出它是 Array 、RegExp 等 object 类型，jQuery 为了扩展 typeof 的表达力，因此有了 $.type 方法
+			// 针对一些特殊的对象（例如 null，Array，RegExp）也进行精准的类型判断
 			// 判断类型前，将常见类型打表，先存于一个 Hash 表 class2type 里边
 			jQuery.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(i, name) {
 				class2type["[object " + name + "]"] = name.toLowerCase();
@@ -1354,6 +1375,8 @@
 			// 此对象为 document 的 jQuery 对象，所有的 jQuery 对象最终都将指向它
 			// 可以在chrome dev tools中观察 prevObject
 			rootjQuery = jQuery(document);
+
+
 			/*!
 			 * Sizzle CSS Selector Engine v1.10.2
 			 * http://sizzlejs.com/
@@ -1364,6 +1387,7 @@
 			 *
 			 * Date: 2013-07-03
 			 */
+			// 下面一长篇开始将是 Sizzle 引擎
 			(function(window, undefined) {
 
 				// 一些变量，下文会用到，可以先初略了解
@@ -4884,7 +4908,7 @@
 				},
 
 				// For internal use only.
-				// 添加一个仅供内部使用的数据
+				// 添加或读取一个仅供内部使用的数据
 				_data: function(elem, name, data) {
 					return internalData(elem, name, data, true);
 				},
@@ -5071,64 +5095,118 @@
 			// $.data() $().data() 结束
 			// --------------------------------
 
+
+			// jQuery 的队列管理
+			// 这里拓展的 3 个方法是底层方法，是其内部调用的
 			jQuery.extend({
+				// 静态的底层方法实现入列
+				// 方法重载，当只传入 queue(elem, type) 表示返回挂载在 elem 上名字为 type 的队列信息
+				// 传入 queue(elem, type, data) 表示 data 入列 
 				queue: function(elem, type, data) {
+					// 最后返回的队列信息
 					var queue;
 
+					// elem 存在
 					if (elem) {
+						// 拼接队列名，为
+						// typequeue 或者 fxqueue，不传入队列名则默认为后者
+						// 当是默认队列时，也就是 animate 操作时，队列名为 fxqueue
 						type = (type || "fx") + "queue";
+
+						// jQuery._data() 添加或读取一个仅供内部使用的数据
+						// 这里是取出队列
 						queue = jQuery._data(elem, type);
 
 						// Speed up dequeue by getting out quickly if this is just a lookup
+						// 如果有 data ，表示是将 data 入列，反之是取队列，返回上面已经取到的队列即可
 						if (data) {
+							// 查看 queue 是否已经存在，
 							if (!queue || jQuery.isArray(data)) {
+								// 不存在，新建一个队列，并将数据以数组形式 jQuery.makeArray(data) 
+								// 使用 jQuery._data 存储起来
+								// jQuery.makeArray() -- 将类似数组或者不是数组的东西强制转换成一个数组然后返回
 								queue = jQuery._data(elem, type, jQuery.makeArray(data));
 							} else {
+								// 已经有该队列了，直接 push 入列
 								queue.push(data);
 							}
 						}
+
+						// 返回队列
+						// 这个方法主要注意方法的重载，当传入 data 和不传 data 的两种处理方法
+						// 以及队列的存储使用了内部方法 $._data()
 						return queue || [];
 					}
 				},
 
+				// 出列，在匹配的元素上执行队列中的下一个函数
 				dequeue: function(elem, type) {
+					// 队列名，如果没有传入 type 参数，则赋予默认的队列名 “fx”，也就是 animate 操作
 					type = type || "fx";
 
+					// 使用 jQuery.queue(elem, type) 取到队列
+					// 上文提到了，当 jQuery.queue(elem, type) 这种传两个参数（不带 data ）的时候，是 get 操队列作
 					var queue = jQuery.queue(elem, type),
+
+						// 队列长度，注意使用 jQuery.queue(elem, type) 返回的必然是个数组
 						startLength = queue.length,
+
+						// 弹出队列头部 data （FIFO，先入先出）
 						fn = queue.shift(),
+
+ 						// hooks 其实是元素 elem 在数据缓存中的一个属性对象，
+ 						// 如果我们调用的是 $.dequeue(document,"q1") 的话，
+ 						// 那么属性对象名就是 q1queueHooks，
+ 						// 属性值是 {empty: jQuery.Callbacks("once memory").add(function() { data_priv.remove( elem, [ type + "queue", key ] );})}
+ 						// 因此你使用 hooks.empty，其实就是 q1queueHooks.empty
 						hooks = jQuery._queueHooks(elem, type),
+
+						// 预处理，触发当前队列的下一个函数
 						next = function() {
 							jQuery.dequeue(elem, type);
 						};
 
 					// If the fx queue is dequeued, always remove the progress sentinel
+	        // 如果取到的是一个占位符，则舍弃再从队列取出一个
+	        // 只有动画队列会设置占位符，表示动画正在执行中
 					if (fn === "inprogress") {
 						fn = queue.shift();
 						startLength--;
 					}
 
+					// 是否有 fn
 					if (fn) {
 
 						// Add a progress sentinel to prevent the fx queue from being
 						// automatically dequeued
+						// 当是默认队列时，也就是 animate 操作时，就会先往队列的前面添加 inprogress 占位符
 						if (type === "fx") {
 							queue.unshift("inprogress");
 						}
 
 						// clear up the last queue stop function
 						delete hooks.stop;
+
+						// 执行 fn ，执行完之后，就会调用 next 方法，进行出队
 						fn.call(elem, next, hooks);
 					}
 
+					// 当队列结束后，清理数据缓存中队列数据
 					if (!startLength && hooks) {
+						// 这里执行 fire 方法，就会触发 add 添加的方法，也就是data_priv.remove( elem, [ type + "queue", key ] );
+						// 把缓存数据中的所有队列信息，以及 typequeueHooks 一起删除掉
 						hooks.empty.fire();
 					}
 				},
 
 				// not intended for public consumption - generates a queueHooks object, or returns the current one
+				// 产生一个 queueHooks 对象，或者是返回当前有的那个
 				_queueHooks: function(elem, type) {
+					// key 名为 type + "queueHooks"
 					var key = type + "queueHooks";
+
+					// jQuery._data(elem, key) 存在，则直接返回
+					// 否则，添加一个 keyqueueHooks 对象
 					return jQuery._data(elem, key) || jQuery._data(elem, key, {
 						empty: jQuery.Callbacks("once memory").add(function() {
 							jQuery._removeData(elem, type + "queue");
@@ -5137,62 +5215,114 @@
 					});
 				}
 			});
-
+			
+			// jQuery原型方法，供 jQuery 对象使用
+			// $().queue()
 			jQuery.fn.extend({
+				// 函数入队，返回队列
+				// 注意方法的重载，传入 data 参数与否的区别（set or get）
 				queue: function(type, data) {
+					// 与 arguments.length 对比
+					// arguments.length -- 传入参数的个数
 					var setter = 2;
 
+					// 如果 type 不是 "string" 类型
+					// 也就是传入的是单个参数
 					if (typeof type !== "string") {
 						data = type;
 						type = "fx";
 						setter--;
 					}
 
+					// 传参数少于 setter
+					// get -- 取队列
 					if (arguments.length < setter) {
 						return jQuery.queue(this[0], type);
 					}
 
+					// 运行到这里说明是 set 队列
+					// 设置 data
 					return data === undefined ?
+						// data 为 undefine
+						// 返回 this
 						this :
+
+						// data 不为 undefine
+						// 遍历 this
+						// 这里的是 this 指的是 jQuery 对象,是一个类数组对象,each 是遍历操作
 						this.each(function() {
+							// data 入列
+							// 这里 this 指代单个 DOM 元素，为每个对象添加 data 到队列中
 							var queue = jQuery.queue(this, type, data);
 
 							// ensure a hooks for this queue
 							jQuery._queueHooks(this, type);
 
+              // 如果队列顶部不是占位符 inprogress 且 type 是 fx 则调用出队列
+              // 这里运动的情况,如果没有动画函数正在执行,则立刻出队并执行动画函数
+              // 这里看起来是不是有点像 callbacks 的 memory 模式呢 add 的同时被 fireWidth
 							if (type === "fx" && queue[0] !== "inprogress") {
 								jQuery.dequeue(this, type);
 							}
 						});
 				},
+				// 出列，执行队列中的下一个函数
 				dequeue: function(type) {
+					// 这里的是 this 指的是 jQuery 对象,是一个类数组对象,each 是遍历操作
 					return this.each(function() {
+						// 调用内部 jQuery.dequeue()
 						jQuery.dequeue(this, type);
 					});
 				},
 				// Based off of the plugin by Clint Helfers, with permission.
 				// http://blindsignals.com/index.php/2009/07/jquery-delay/
+				// 设置延迟出队
+				// 第一个参数 time 是延迟的时间，第二个参数 type（队列的名字） 是哪个队列延迟
+				// 举个例子说下 delay 方法的作用：
+				// $(this).animate({width:300},2000).delay(2000).animate({left:300},2000)
+				// 这个代码的意思是：第一个定时器函数执行结束后，会延迟两秒钟，才会执行第二个定时器函数
 				delay: function(time, type) {
-					time = jQuery.fx ? jQuery.fx.speeds[time] || time : time;
+					// jQuery.fx.speeds = {slow: 600,fast: 200,_default: 400}
+					// 意思就是说，你 delay 里面是否写了 slow ， fast ，或 _default 
+					// 如果是，就直接调用默认的值，如果传入的是数字，那么就只用数字
+					time =  ? jQuery.fx.speeds[time] || time : time;
+
+					// 是否传入了 type 参数
+					// 没传入则使用默认 fx ，表示动画队列
 					type = type || "fx";
 
 					return this.queue(type, function(next, hooks) {
+						// 延迟 time 秒，再进行出队
+						// 意思就是 time 秒后，第二个定时器函数才会执行
 						var timeout = setTimeout(next, time);
+						// 这个方法会清除定时器，如果下文执行
+						// next 方法就不会执行，也就不会出队了
 						hooks.stop = function() {
 							clearTimeout(timeout);
 						};
 					});
 				},
+				// 清除队列，使用的方法是置空队列
+				// 传入数组，会覆盖队列的原数组
 				clearQueue: function(type) {
 					return this.queue(type || "fx", []);
 				},
 				// Get a promise resolved when queues of a certain type
 				// are emptied (fx is the type by default)
+				// type 是指队列的名字，如果此 type 的队列全部出队后，就会执行 done 添加的方法
+				// 例子：
+				// $(this).animate({width:300},2000).animate({left:300},2000);
+				// $(this).promise().done(function(){alert(3)});
+				// 这句代码的意思是，等上面两个定时器函数都执行结束后（因为他们默认处理的都是 fx 队列）。才会执行弹出 alert(3) 的函数
 				promise: function(type, obj) {
 					var tmp,
 						count = 1,
+
+						// 新建一个 deferred 对象
 						defer = jQuery.Deferred(),
 						elements = this,
+
+						// 参数的长度
 						i = this.length,
 						resolve = function() {
 							if (!(--count)) {
@@ -5200,23 +5330,38 @@
 							}
 						};
 
+					// 传入的是单个参数
 					if (typeof type !== "string") {
 						obj = type;
 						type = undefined;
 					}
+
+					// 如果没传入队列名，就用 fx 默认队列 
 					type = type || "fx";
 
+					// 执行一次
 					while (i--) {
+						// 去 queueHooks 缓存系统找跟这个元素有关的数据
 						tmp = jQuery._data(elements[i], type + "queueHooks");
+
+						// 如果存在，就证明队列中有定时器函数要执行
+						// 进入if语句
 						if (tmp && tmp.empty) {
 							count++;
 							tmp.empty.add(resolve);
 						}
 					}
+
+					// 这里会先执行一次 resolve 方法，count--
 					resolve();
+
+					// 返回这个延迟对象
+					// 如果感觉这个方法没看懂，需要回头先弄清楚 $.Callbacks() 和 $.Deferred() 对象的作用
 					return defer.promise(obj);
 				}
 			});
+
+
 			var nodeHook, boolHook,
 				rclass = /[\t\r\n\f]/g,
 				rreturn = /\r/g,
