@@ -5,7 +5,7 @@
 [详细全文中文注释请戳这里（未完待续）](https://github.com/chokcoco/jQuery-/blob/master/jquery-1.10.2__read.js)
 
 
-部分参考资料 收集如下
+部分参考资料，收集如下
 
 ## 源码类分析：
 [jQuery源码解析（架构与依赖模块)](http://www.imooc.com/view/172)
