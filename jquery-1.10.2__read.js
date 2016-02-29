@@ -5439,12 +5439,19 @@
 					return jQuery.access(this, jQuery.attr, name, value, arguments.length > 1);
 				},
 
+				// 清除某个属性（可批量）
 				removeAttr: function(name) {
 					return this.each(function() {
+						// 调用了 jQuery.removeAttr()
 						jQuery.removeAttr(this, name);
 					});
 				},
 
+				// .prop() 方法只获得第一个匹配元素的属性值 
+				// 如果元素上没有该属性，或者如果没有匹配的元素。那么该方法会返回 undefined 值
+				// 与 $.attr() 的区别（之前的版本，如1.8.x 和 1.9.x 两个方法有如下不一样）
+				// 具有 true 和 false 两个属性的属性，如 checked, selected 或者 disabled 使用 prop()，其他的使用 attr()
+				// 这个版本 两个方法的实现完全一样
 				prop: function(name, value) {
 					return jQuery.access(this, jQuery.prop, name, value, arguments.length > 1);
 				},
