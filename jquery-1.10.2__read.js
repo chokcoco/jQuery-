@@ -36,8 +36,8 @@
 		// Support: Firefox 18+
 		//"use strict";
 		var
-		// The deferred used on DOM ready
-		// 一个用在 DOM ready 上的回调函数处理变量
+			// The deferred used on DOM ready
+			// 一个用在 DOM ready 上的回调函数处理变量
 			readyList,
 
 			// A central reference to the root jQuery(document)
@@ -566,9 +566,9 @@
 			return target;
 		};
 
-		// 一些工具函数
-		// jQuery.extend(object)  为扩展jQuery类本身.为类添加新的方法。 
-		// jQuery.fn.extend(object) 给jQuery对象添加方法。 
+		// 一些工具函数，区分 jQuery.extend(object) 和 jQuery.fn.extend(object) 区别
+		// jQuery.extend(object)  为扩展 jQuery 类本身，为类添加新的方法。 
+		// jQuery.fn.extend(object) 给 jQuery 对象添加方法 
 		jQuery.extend({
 				// Unique for each copy of jQuery on the page
 				// Non-digits removed to match rinlinejQuery
@@ -630,7 +630,6 @@
 				},
 
 				// Handle when the DOM is ready
-				// 
 				ready: function(wait) {
 
 					// Abort if there are pending holds or we're already ready
@@ -814,6 +813,7 @@
 					return jQuery.merge([], parsed.childNodes);
 				},
 
+				// 解析 JSON 字符串
 				parseJSON: function(data) {
 					// Attempt to parse using the native JSON parser first
 					if (window.JSON && window.JSON.parse) {
@@ -1184,33 +1184,59 @@
 
 						// Multifunctional method to get and set values of a collection
 						// The value/s can optionally be executed if it's a function
+						// access 函数只在内部 $.fn.attr 和 $.fn.css 方法中用到
+						// example:
+						// $('#test').height(100).width(100).css('color', 'red') 或者 $('#test').attr('class','cls1') -- 都会调用 $.access()
+						// 这是一个重载方法，根据传入的参数不同，作用不同
+     				// @param elems 元素的集合[collection]，[类]数组
+     				// @param fn 函数
+     				// @param key 属性
+     				// @param value 值
+     				// @param chainable 是否可以链式调用，如果是 get 动作，为 false，如果是 set 动作，为 true
+     				//   对于 get 类方法，我们会获得一个返回值，例如字符串、数字等等，这时候是不需要链式执行的，而对于 set 类方法，通常需要如此
+     				// @param emptyGet 如果 jQuery 没有选中到元素的返回值
+     				// @param raw value 是否为原始数据，如果 raw 是 true，说明 value 是原始数据，如果是 false，说明 raw 是个函数
+     				// @returns {*}
 						access: function(elems, fn, key, value, chainable, emptyGet, raw) {
 							var i = 0,
+								// 元素的集合[collection]，[类]数组
 								length = elems.length,
 								bulk = key == null;
 
 							// Sets many values
+							// 如果参数 key 是对象，表示要设置多个属性，则遍历参数 key，遍历调用 access 方法
+							// example:
+							// $('#div').attr({data:1,def:'addd'});
 							if (jQuery.type(key) === "object") {
+								// 设置属性，支持链式调用
 								chainable = true;
 								for (i in key) {
 									jQuery.access(elems, fn, i, key[i], true, emptyGet, raw);
 								}
 
-								// Sets one value
+							// Sets one value
+							// 设置单个属性
+							// example:
+							// $('#box').attr('customvalue','abc')
+             	// $('#box').attr('customvalue',function (value) {});
 							} else if (value !== undefined) {
+								// 设置属性，支持链式调用
 								chainable = true;
 
 								if (!jQuery.isFunction(value)) {
 									raw = true;
 								}
 
+								// 相当于
+ 								// if (key == null && value !== undefined)
 								if (bulk) {
 									// Bulk operations run against the entire set
 									if (raw) {
 										fn.call(elems, value);
 										fn = null;
 
-										// ...except when executing function values
+									// ...except when executing function values
+									// 如果key有值的话，这里的 bulk 是为了节省一个变量，将 fn 用 bulk 存起来，然后封装 fn 的调用
 									} else {
 										bulk = fn;
 										fn = function(elem, key, value) {
@@ -1219,13 +1245,25 @@
 									}
 								}
 
+								// 如果 fn 存在，掉调用每一个元素，无论 key 是否有值，都会走到这个判断，执行 set 动作
 								if (fn) {
 									for (; i < length; i++) {
+
+								    // 如果 value 是原始数据，就取 value，如果是个函数，就调用这个函数取值
+                    // $('#box').attr('abc',function (index,value) { });
+                    // index 指向当前元素的索引,value 指向 oldValue
+                    // 先调用 jQuery.attr(elements[i],key) 取到当前的值，然后调用传入的fn值
 										fn(elems[i], key, raw ? value : value.call(elems[i], i, fn(elems[i], key)));
 									}
 								}
 							}
 
+			         // 如果 chainable 为 true，说明是个 set 方法，就返回 elems
+			         // 否则说明是 get 方法
+			         // 1.如果 bulk 是个 true，说明没有 key 值，调用 fn，将 elems 传进去
+			         // 2.如果 bulk 是个 false，说明 key 有值，然后判断元素的长度是否大于 0
+			         //    2.1 如果大于 0，调用 fn，传入 elems[0] 和 key ，完成 get
+			         //    2.2 如果为 0，说明传参有问题，返回指定的空值 emptyGet
 							return chainable ?
 								elems :
 
@@ -4299,7 +4337,8 @@
 				a.style.cssText = "top:1px;float:left;opacity:.5";
 
 				// Test setAttribute on camelCase class. If it works, we need attrFixes when doing get/setAttribute (ie6/7)
-				// 测试 setAttribute 是否需要传入驼峰表示法的参数
+				// 测试是否支持 setAttribute 方法
+				// setAttribute 方法需要传入驼峰表示法的参数
 				// 在 IE67 中要获得单个属性的值，就必须将属性名转为驼峰形式
 				// element.currentStyle.getAttribute(camelCase(style)) -- http://www.cnblogs.com/coco1s/p/5210667.html
 				support.getSetAttribute = div.className !== "t";
@@ -4394,6 +4433,8 @@
 				// getAttribute 检测
 				input = document.createElement("input");
 				input.setAttribute("value", "");
+
+				// 是否支持 input 的 getAttribute("value")
 				support.input = input.getAttribute("value") === "";
 
 				// Check if an input maintains its value after becoming a radio
@@ -5361,17 +5402,39 @@
 				}
 			});
 
-
+			
+			// 下面一块是关于元素属性的操作 -- attr() 、prop() 等
 			var nodeHook, boolHook,
+				// \t -- 制表符，Tab
+				// \r -- 回车符
+				// \n -- 换行符
+				// \f -- 换页符 
 				rclass = /[\t\r\n\f]/g,
+
+				// \r -- 回车符
+				// 匹配单个回车
 				rreturn = /\r/g,
+
+				// 匹配一些 input 结构
 				rfocusable = /^(?:input|select|textarea|button|object)$/i,
+
+				// a | area
 				rclickable = /^(?:a|area)$/i,
+
+				// checked | selected
 				ruseDefault = /^(?:checked|selected)$/i,
+
+				// jQuery.support.getSetAttribute 测试是否支持 setAttribute 方法
+				// setAttribute 用于在 IE6\7 下获取元素的单个 CSS 属性值  
 				getSetAttribute = jQuery.support.getSetAttribute,
+
+				// 是否支持 input 的 getAttribute("value")
 				getSetInput = jQuery.support.input;
 
+			// jQuery 对象方法拓展	
 			jQuery.fn.extend({
+				// 获取匹配的元素集合中的第一个元素的属性的值，或设置每一个匹配元素的一个或多个属性
+				// 调用了 jQuery.access 方法实现
 				attr: function(name, value) {
 					return jQuery.access(this, jQuery.attr, name, value, arguments.length > 1);
 				},
