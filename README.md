@@ -5,7 +5,7 @@
 [详细全文中文注释请戳这里（未完待续）](https://github.com/chokcoco/jQuery-/blob/master/jquery-1.10.2__read.js)
 
 
-部分参考资料 收集如下
+部分参考资料，收集如下
 
 ## 源码类分析：
 [jQuery源码解析（架构与依赖模块)](http://www.imooc.com/view/172)
@@ -46,6 +46,9 @@
 [jQuery数据缓存$.data 的使用以及源码解析](https://segmentfault.com/a/1190000000626031)
 
 [jQ的数据管理](http://www.html-js.com/article/cainiaojiedujQ-jQdishujuguanlizhongpian)
+
+## 整体架构图
+![jQuery整体架构脑图，jQuery整体架构](https://raw.githubusercontent.com/chokcoco/jQuery-/master/mindMap/jQuery%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84.png)
 
 ## License
 MIT
