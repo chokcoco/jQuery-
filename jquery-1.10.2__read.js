@@ -5449,17 +5449,25 @@
 
 				// .prop() 方法只获得第一个匹配元素的属性值 
 				// 如果元素上没有该属性，或者如果没有匹配的元素。那么该方法会返回 undefined 值
-				// 与 $.attr() 的区别（之前的版本，如1.8.x 和 1.9.x 两个方法有如下不一样）
+				// 与 $.attr() 的区别
 				// 具有 true 和 false 两个属性的属性，如 checked, selected 或者 disabled 使用 prop()，其他的使用 attr()
-				// 这个版本 两个方法的实现完全一样
 				prop: function(name, value) {
 					return jQuery.access(this, jQuery.prop, name, value, arguments.length > 1);
 				},
 
+				// 为集合中匹配的元素删除一个属性
 				removeProp: function(name) {
 					name = jQuery.propFix[name] || name;
+
+					// 遍历 this 集合
 					return this.each(function() {
 						// try/catch handles cases where IE balks (such as removing a property on window)
+						// 若尝试移除 DOM 元素或 window 对象上一些内建的 属性（ property ） ，浏览器可能会产生错误
+						// 如果真的那么做了，那么 jQuery 首先会将 属性（ property ） 设置成 undefined ，然后忽略任何浏览器产生的错误
+						// 一般来说,只需要移除自定义的 属性（ property ） ，而不是移除内建的（原生的）属性（ property ）
+						// 所以不要使用此方法来删除原生的属性（ property ）
+						// 比如checked, disabled, 或者 selected ，这将完全移除该属性，一旦移除，不能再次被添加到元素上
+						// 使用 .prop() 来设置这些属性设置为 false 代替
 						try {
 							this[name] = undefined;
 							delete this[name];
@@ -5467,102 +5475,145 @@
 					});
 				},
 
+				// 向被选元素添加一个或多个类
 				addClass: function(value) {
 					var classes, elem, cur, clazz, j,
 						i = 0,
+						// 要操作的被选元素集合
 						len = this.length,
+						// 检测value是否为字符串
 						proceed = typeof value === "string" && value;
 
+					// 如果 value 是函数	
 					if (jQuery.isFunction(value)) {
+						// 那么逐个遍历现有元素，递归addClass方法
 						return this.each(function(j) {
 							jQuery(this).addClass(value.call(this, j, this.className));
 						});
 					}
 
+					// 如果是个字符串，那就执行正真的添加
 					if (proceed) {
 						// The disjunction here is for better compressibility (see removeClass)
+						// core_rnotwhite = /\S+/g ，匹配任意不是空白符的字符串
+						// 将 value 用空格分开成一个数组，相当于 classes = (value || "").split("/\s+/")
 						classes = (value || "").match(core_rnotwhite) || [];
 
+						// 遍历被选元素集合
 						for (; i < len; i++) {
 							elem = this[i];
+
+							// 检测是否为 HTMLElement
+							// nodeType === 1 --  Element
 							cur = elem.nodeType === 1 && (elem.className ?
+								// rclass = /[\t\r\n\f]/g
+								// 去掉换行换页什么的，两边加上空格，防止出错
 								(" " + elem.className + " ").replace(rclass, " ") :
+								// 如果没有class的话，那就等于一个空格
 								" "
 							);
 
 							if (cur) {
 								j = 0;
+								// 遍历所有的classes
 								while ((clazz = classes[j++])) {
+									// 当前元素没有要添加的 Class，才加入
 									if (cur.indexOf(" " + clazz + " ") < 0) {
 										cur += clazz + " ";
 									}
 								}
+								// 设置 className，去掉首尾空格
 								elem.className = jQuery.trim(cur);
 
 							}
 						}
 					}
 
+					// 返回 this，支持链式操作
 					return this;
 				},
 
+				// 移除当前元素集合指定 Class
 				removeClass: function(value) {
 					var classes, elem, cur, clazz, j,
 						i = 0,
 						len = this.length,
 						proceed = arguments.length === 0 || typeof value === "string" && value;
 
+					// 传入的如果是方法，遍历移除	
 					if (jQuery.isFunction(value)) {
 						return this.each(function(j) {
 							jQuery(this).removeClass(value.call(this, j, this.className));
 						});
 					}
+
+					// 传入的是字符串
 					if (proceed) {
+						// The disjunction here is for better compressibility (see removeClass)
+						// core_rnotwhite = /\S+/g ，匹配任意不是空白符的字符串
+						// 将 value 用空格分开成一个数组，相当于 classes = (value || "").split("/\s+/")
 						classes = (value || "").match(core_rnotwhite) || [];
 
 						for (; i < len; i++) {
 							elem = this[i];
 							// This expression is here for better compressibility (see addClass)
+							// 检测是否为 HTMLElement
 							cur = elem.nodeType === 1 && (elem.className ?
+								// 去掉换行换页什么的，两边加上空格，防止出错
 								(" " + elem.className + " ").replace(rclass, " ") :
 								""
 							);
 
+							// cur 不为空
 							if (cur) {
 								j = 0;
+								// 遍历 classes ，如果有则删除
 								while ((clazz = classes[j++])) {
 									// Remove *all* instances
 									while (cur.indexOf(" " + clazz + " ") >= 0) {
 										cur = cur.replace(" " + clazz + " ", " ");
 									}
 								}
+								// 重置 className
 								elem.className = value ? jQuery.trim(cur) : "";
 							}
 						}
 					}
 
+					// 返回 this，支持链式操作
 					return this;
 				},
 
+		    // 设置或移除被选元素的一个或多个类进行切换
+		    // 该方法检查每个元素中指定的类。如果不存在则添加类，如果已设置则删除之。这就是所谓的切换效果。
+		    // @param value String:类名  Function:规定返回需要添加或删除的一个或多个类名的函数 $(selector).toggleClass(function(index,class,switch),switch)
+		    // @param stateVal 规定是否添加 (true) 或移除 (false) 类为 true 不存在,则添加。为 false ,已存在则删除
+		    // @returns {*}
 				toggleClass: function(value, stateVal) {
+					// 传入类名类型
 					var type = typeof value;
 
+					// 规定是否添加 (true) 或移除 (false) 类为 true 不存在,则添加。为 false ,已存在则删除
 					if (typeof stateVal === "boolean" && type === "string") {
 						return stateVal ? this.addClass(value) : this.removeClass(value);
 					}
 
+					// 如果 value 的类型是 function
 					if (jQuery.isFunction(value)) {
 						return this.each(function(i) {
 							jQuery(this).toggleClass(value.call(this, i, this.className, stateVal), stateVal);
 						});
 					}
 
+					// 遍历 this 元素合集
 					return this.each(function() {
+						// 如果是传入单个参数，且参数是 string 类型
 						if (type === "string") {
 							// toggle individual class names
 							var className,
 								i = 0,
 								self = jQuery(this),
+								// 
 								classNames = value.match(core_rnotwhite) || [];
 
 							while ((className = classNames[i++])) {
