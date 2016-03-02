@@ -5613,19 +5613,25 @@
 							var className,
 								i = 0,
 								self = jQuery(this),
-								// 
+								// core_rnotwhite = /\S+/g ，匹配任意不是空白符的字符串
+								// 将 value 用空格分开成一个数组，相当于 classes = (value || "").split("/\s+/")
 								classNames = value.match(core_rnotwhite) || [];
 
+							// 如果传入了多个 Class ，遍历class	
 							while ((className = classNames[i++])) {
 								// check each className given, space separated list
+								// 查询是否已经有当前遍历到的这个 Class，有则删除，
 								if (self.hasClass(className)) {
 									self.removeClass(className);
+								// 反之添加		
 								} else {
 									self.addClass(className);
 								}
 							}
 
-							// Toggle whole class name
+						// Toggle whole class name
+						// 如果只传入了第二个参数 || 或者value是false
+            // 则对整个 class 字符串执行设置和取消
 						} else if (type === core_strundefined || type === "boolean") {
 							if (this.className) {
 								// store className if set
@@ -5641,19 +5647,31 @@
 					});
 				},
 
+				// 在元素的 class 属性上是否存在指定的 selector 
+				// 由于可能是在元素的集合上查找，有一项存在就返回 true,否则就返回 false
 				hasClass: function(selector) {
+					// 传入的 selector 首尾添加空格
 					var className = " " + selector + " ",
 						i = 0,
 						l = this.length;
+
+					// 遍历元素的合集	
 					for (; i < l; i++) {
+						// 首先确保 this 是 Element 元素
+						// 并且 selector 存在于 this 的 ClassName 中
 						if (this[i].nodeType === 1 && (" " + this[i].className + " ").replace(rclass, " ").indexOf(className) >= 0) {
 							return true;
 						}
 					}
 
+					// 否则返回 false
 					return false;
 				},
 
+				// 获取匹配的元素集合中第一个元素的当前值
+				// 或设置匹配的元素集合中每个元素的值
+				// val方法主要做的就是对于 option 和 select 的兼容性的处理，
+				// 正常情况下直接取 Element.vlaue 进行操作，亮点依旧在钩子技术和参数重载上
 				val: function(value) {
 					var ret, hooks, isFunction,
 						elem = this[0];
@@ -5863,7 +5881,8 @@
 						}
 					}
 				},
-
+				// 意思就是在使用attr('type',??)设置的时候就会调用这个 hooks，
+				// 用于处理 IE6-9 input 属性不可写入的问题
 				attrHooks: {
 					type: {
 						set: function(elem, value) {
@@ -5934,6 +5953,7 @@
 			});
 
 			// Hooks for boolean attributes
+			// 
 			boolHook = {
 				set: function(elem, value, name) {
 					if (value === false) {
