@@ -14,7 +14,7 @@
 
 [jQuery源码分析，博客园博文，作者：nuysoft](http://www.cnblogs.com/nuysoft/category/330604.html)
 
-[# 菜鸟解读 jQuery #，前端狮子](http://www.html-js.com/article/column/136?page=2)
+[#菜鸟解读 jQuery#，前端狮子](http://www.html-js.com/article/column/136?page=2)
 
 [读懂jQuery](http://www.html-js.com/article/column/210)
 
