@@ -22,12 +22,13 @@
 // 站在更高的维度去思考这些复杂的逻辑是为了处理或兼容什么，为什么要这样写，一定会有不一样的收获
 // 其次，也是因为这个原因，jQuery 源码存在许多兼容低版本的 HACK 或者逻辑十分晦涩繁琐的代码片段
 // 浏览器兼容这样的大坑极其容易让一个前端工程师不能学到编程的精髓
-// 所以不要太执着于一些边角料，即使兼容性很重要，也应该适度学习理解，当避则避
+// 所以不要太执着于一些边角料，即使兼容性很重要，也应该适度学习理解，适可而止
 
 // 用一个函数域包起来，就是所谓的沙箱
 // 在这里边 var 定义的变量，属于这个函数域内的局部变量，避免污染全局
 // 把当前沙箱需要的外部变量通过函数参数引入进来
 // 只要保证参数对内提供的接口的一致性，你还可以随意替换传进来的这个参数
+// 为了不污染全局作用域，只在后面暴露 $ 和 jQuery 这 2 个变量给外界，尽量的避开变量冲突
 (function(window, undefined) {
 
 		// Can't do this because several apps including ASP.NET trace
@@ -60,7 +61,7 @@
 			_jQuery = window.jQuery,
 
 			// Map over the $ in case of overwrite
-			// 设置别名
+			// 设置别名，同上所述
 			_$ = window.$,
 
 			// [[Class]] -> type pairs
@@ -283,7 +284,6 @@
 							// HANDLE: $(#id)
 							// 处理id -> $('#id')
 							// 反之，match[1]为false 的情况下，是上面的 match = rquickExpr.exec( selector )
-							// 
 						} else {
 							// match[2] 是匹配到的 id 名
 							elem = document.getElementById(match[2]);
@@ -294,6 +294,7 @@
 								// Handle the case where IE and Opera return items
 								// by name instead of ID
 								if (elem.id !== match[2]) {
+									// 调用 Sizzle 引擎进行更复杂的选择器查找
 									return rootjQuery.find(selector);
 								}
 
@@ -311,8 +312,9 @@
 						// 如果第一个参数是一个.className ，第二参数为一个选择器
 					} else if (!context || context.jquery) {
 						// rootjQuery 相当于 jQuery(document)
-						// 下面的return 相当于 $(context).find( selector )
+						// 下面的 return 相当于 $(context).find( selector )
 						// (如果 context 为空) jQuery(document).find( selector )
+						// 调用 Sizzle 引擎进行更复杂的选择器查找
 						return (context || rootjQuery).find(selector);
 
 						// HANDLE: $(expr, context)
@@ -322,6 +324,7 @@
 					} else {
 						// this.constructor 即是 jQuery
 						// this.constructor( context ).find( selector ) -> jQuery(context).find(selector)
+						// 调用 Sizzle 引擎进行更复杂的选择器查找
 						return this.constructor(context).find(selector);
 					}
 
@@ -383,19 +386,22 @@
 			// Take an array of elements and push it onto the stack
 			// (returning the new matched element set)
 			// 将一个 DOM 元素集合加入到 jQuery 栈
-			// 此方法在 jQuery 的 DOM 操作中被频繁的使用, 如在parent(), find(), filter()中
-			// pushStack() 方法通过改变一个 jQuery 对象的 prevObject 属性来"跟踪"链式调用中前一个方法返回的DOM结果集
-			// 当我们再链式调用 end() 方法后, 内部就返回当前 jQuery 对象的 prevObject.
+			// 此方法在 jQuery 的 DOM 操作中被频繁的使用, 如在 parent(), find(), filter() 中
+			// pushStack() 方法通过改变一个 jQuery 对象的 prevObject 属性来跟踪链式调用中前一个方法返回的 DOM 结果集合
+			// 当我们在链式调用 end() 方法后, 内部就返回当前 jQuery 对象的 prevObject 属性
 			pushStack: function(elems) {
 
 				// Build a new jQuery matched element set
-				// 构建一个新的jQuery对象，无参的 this.constructor()，只是返回引用this
+				// 构建一个新的jQuery对象，无参的 this.constructor()，只是返回引用 this
 				// jQuery.merge 把 elems 节点，合并到新的 jQuery 对象
+				// this.constructor 就是 jQuery 的构造函数 jQuery.fn.init，所以 this.constructor() 返回一个 jQuery 对象
+				// 由于 jQuery.merge 函数返回的对象是第二个函数附加到第一个上面，所以 ret 也是一个 jQuery 对象，这里可以解释为什么 pushStack 出入的 DOM 对象也可以用 CSS 方法进行操作
+				// 返回的对象的 prevObject 属性指向上一个对象，所以可以通过这个属性找到栈的上一个对象
 				var ret = jQuery.merge(this.constructor(), elems);
 
 				// Add the old object onto the stack (as a reference)
 				// 给返回的新 jQuery 对象添加属性 prevObject
-				// 所以也就是为什么通过prevObject能取到上一个合集的引用了
+				// 所以也就是为什么通过 prevObject 能取到上一个合集的引用了
 				ret.prevObject = this;
 				ret.context = this.context;
 
@@ -459,6 +465,8 @@
 			// 可以使用 end 方法来返回
 			// 这里的秘籍就是每个对象里边的 prevObject 保存着链中的上一个 jQ 对象
 			end: function() {
+				// 回溯的关键是返回 prevObject 属性
+				// 而 prevObject 属性保存了上一步操作的 jQuery 对象集合
 				return this.prevObject || this.constructor(null);
 			},
 
@@ -478,7 +486,18 @@
 		// 所以通过这个方法生成的实例 this 所指向的 仍然是 jQuery.fn(jQuery.prototype)，所以能正确访问 jQuery 类原型上的属性与方法
 		jQuery.fn.init.prototype = jQuery.fn;
 
-		// 扩展函数
+		// 扩展合并函数
+		// 合并两个或更多对象的属性到第一个对象中，jQuery 后续的大部分功能都通过该函数扩展
+		// 虽然实现方式一样，但是要注意区分用法的不一样，那么为什么两个方法指向同一个函数实现，但是却实现不同的功能呢,
+		// 阅读源码就能发现这归功于 this 的强大力量
+		// 如果传入两个或多个对象，所有对象的属性会被添加到第一个对象 target
+		// 如果只传入一个对象，则将对象的属性添加到 jQuery 对象中，也就是添加静态方法
+		// 用这种方式，我们可以为 jQuery 命名空间增加新的方法，可以用于编写 jQuery 插件
+		// 如果不想改变传入的对象，可以传入一个空对象：$.extend({}, object1, object2);
+		// 默认合并操作是不迭代的，即便 target 的某个属性是对象或属性，也会被完全覆盖而不是合并
+		// 如果第一个参数是 true，则是深拷贝
+		// 从 object 原型继承的属性会被拷贝，值为 undefined 的属性不会被拷贝
+		// 因为性能原因，JavaScript 自带类型的属性不会合并
 		jQuery.extend = jQuery.fn.extend = function() {
 			var src, copyIsArray, copy, name, options, clone,
 				target = arguments[0] || {},
@@ -567,7 +586,7 @@
 		};
 
 		// 一些工具函数，区分 jQuery.extend(object) 和 jQuery.fn.extend(object) 区别
-		// jQuery.extend(object)  为扩展 jQuery 类本身，为类添加新的方法。 
+		// jQuery.extend(object) 为扩展 jQuery 类本身，为类添加新的方法。 
 		// jQuery.fn.extend(object) 给 jQuery 对象添加方法 
 		jQuery.extend({
 				// Unique for each copy of jQuery on the page
@@ -590,16 +609,20 @@
 				//  ... 其他用 $ 作为别名的库的代码
 				//  
 				noConflict: function(deep) {
+					// 判断全局 $ 变量是否等于 jQuery 变量
+					// 如果等于，则重新还原全局变量 $ 为 jQuery 运行之前的变量（存储在内部变量 _$ 中）
 					if (window.$ === jQuery) {
 						// 此时 jQuery 别名 $ 失效
 						window.$ = _$;
 					}
-
+					// 当开启深度冲突处理并且全局变量 jQuery 等于内部 jQuery，则把全局 jQuery 还原成之前的状况
 					if (deep && window.jQuery === jQuery) {
 						// 如果 deep 为 true，此时 jQuery 失效
 						window.jQuery = _jQuery;
 					}
 
+					// 这里返回的是 jQuery 库内部的 jQuery 构造函数（new jQuery.fn.init()） 
+					// 像使用 $ 一样尽情使用它吧
 					return jQuery;
 				},
 
@@ -4040,7 +4063,7 @@
 				return self;
 			};
 
-			// 当 jQuery.extend 只有一个参数的时候，其实就是对jQuery静态方法的一个扩展
+			// 当 jQuery.extend 只有一个参数的时候，其实就是对 jQuery 静态方法的一个扩展
 			// jQuery 整体架构对 extend 的解析
 			// http://www.cnblogs.com/aaronjs/p/3278578.html
 			jQuery.extend({
@@ -5670,13 +5693,15 @@
 
 				// 获取匹配的元素集合中第一个元素的当前值
 				// 或设置匹配的元素集合中每个元素的值
-				// val方法主要做的就是对于 option 和 select 的兼容性的处理，
+				// val 方法主要做的就是对于 option 和 select 的兼容性的处理，
 				// 正常情况下直接取 Element.vlaue 进行操作，亮点依旧在钩子技术和参数重载上
 				val: function(value) {
 					var ret, hooks, isFunction,
 						elem = this[0];
 
+					// 如果没有传入参数	
 					if (!arguments.length) {
+						// elem = this[0]
 						if (elem) {
 							hooks = jQuery.valHooks[elem.type] || jQuery.valHooks[elem.nodeName.toLowerCase()];
 
@@ -5733,11 +5758,17 @@
 			});
 
 			jQuery.extend({
+				// 
 				valHooks: {
+					// 当你获取 option 元素的 value 属性值时，
+					// 如果没有对此 option 显式设置 value 值，获取到的值是 option 的 text ，也就是 option 的文本
+					// 但是 IE6-7 下获取到的值是""
 					option: {
 						get: function(elem) {
 							// Use proper attribute retrieval(#6932, #12072)
+							// 在 IE6-7 下，val 是一个 object
 							var val = jQuery.find.attr(elem, "value");
+							
 							return val != null ?
 								val :
 								elem.text;
