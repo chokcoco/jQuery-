@@ -1,6 +1,6 @@
 # jQuery- v1.10.2 源码解读
 
-中文注释是我的解读 ，才疏学浅，若有不正之处，万望告知。
+jQuery 源码中，中文注释是我的解读 ，才疏学浅，若有不正之处，万望告知。
 
 [详细全文中文注释请戳这里（未完待续）](https://github.com/chokcoco/jQuery-/blob/master/jquery-1.10.2__read.js)
 
@@ -14,7 +14,7 @@
 
 [jQuery源码分析，博客园博文，作者：nuysoft](http://www.cnblogs.com/nuysoft/category/330604.html)
 
-[# 菜鸟解读 jQuery #，前端狮子](http://www.html-js.com/article/column/136?page=2)
+[#菜鸟解读 jQuery#，前端狮子](http://www.html-js.com/article/column/136?page=2)
 
 [读懂jQuery](http://www.html-js.com/article/column/210)
 
@@ -47,7 +47,7 @@
 
 [jQ的数据管理](http://www.html-js.com/article/cainiaojiedujQ-jQdishujuguanlizhongpian)
 
-## 整体架构图
+## jQuery 整体架构图
 ![jQuery整体架构脑图，jQuery整体架构](https://raw.githubusercontent.com/chokcoco/jQuery-/master/mindMap/jQuery%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84.png)
 
 ## License
