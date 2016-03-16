@@ -4442,6 +4442,8 @@
 				// (WebKit marks them as disabled)
 				// chrome23 已修复
 				select.disabled = true;
+				// 如果预设的 select 元素中 option 元素不会自动标识为 disabled（oldIE）
+				// 那么 optDisabled 会被设定为 true
 				support.optDisabled = !opt.disabled;
 
 				// Support: IE<9
@@ -5703,6 +5705,7 @@
 					if (!arguments.length) {
 						// elem = this[0]
 						if (elem) {
+							// 
 							hooks = jQuery.valHooks[elem.type] || jQuery.valHooks[elem.nodeName.toLowerCase()];
 
 							if (hooks && "get" in hooks && (ret = hooks.get(elem, "value")) !== undefined) {
@@ -5721,6 +5724,7 @@
 						return;
 					}
 
+					// 判断 value 是否是函数
 					isFunction = jQuery.isFunction(value);
 
 					return this.each(function(i) {
@@ -5769,17 +5773,23 @@
 							// 在 IE6-7 下，val 是一个 object
 							var val = jQuery.find.attr(elem, "value");
 							
+							// 兼容 IE 的处理
 							return val != null ?
 								val :
 								elem.text;
 						}
 					},
 					select: {
+						// 当 select 是单选时，获取的 value 值，就是你选择的那个 option 的值，
+						// 如果是多选，获取值时，就是你选择的所有 option 的值的数组形式
 						get: function(elem) {
 							var value, option,
+								// select 的所有 option 的集合
 								options = elem.options,
+								// 当前选择的 option 的索引值
 								index = elem.selectedIndex,
 								one = elem.type === "select-one" || index < 0,
+								// 如果是单选框，values 为 null，如果是多选，values = []
 								values = one ? null : [],
 								max = one ? index + 1 : options.length,
 								i = index < 0 ?
@@ -5787,13 +5797,21 @@
 								one ? index : 0;
 
 							// Loop through all the selected options
+							// 循环所有 options 选项
+							// 单选，循环一次，多选，循环多次
 							for (; i < max; i++) {
+								// 拿到当前循环到的项
 								option = options[i];
 
 								// oldIE doesn't update selected after form reset (#2551)
+								// IE6-9 下，点击 reset 按钮时，option 的 selected 不会恢复默认值
+								// 其他浏览器会恢复所有 option 的 selected 的默认值
 								if ((option.selected || i === index) &&
 									// Don't return options that are disabled or in a disabled optgroup
+									// jQuery.support.optDisabled -- 
+									// 如果 option 被设置了 disabled，那么获取 option 的值时，是获取不到的
 									(jQuery.support.optDisabled ? !option.disabled : option.getAttribute("disabled") === null) &&
+									// 如果 option 的父元素被设置了 disabled，并且父元素是 optgroup，那么也获取不到
 									(!option.parentNode.disabled || !jQuery.nodeName(option.parentNode, "optgroup"))) {
 
 									// Get the specific value for the option
@@ -5851,27 +5869,37 @@
 					// All attributes are lowercase
 					// Grab necessary hook if one is defined
 					if (nType !== 1 || !jQuery.isXMLDoc(elem)) {
+						// 转化为小写
 						name = name.toLowerCase();
+						// 获取相应的 hook, 这里主要是获取 attrHooks,
 						hooks = jQuery.attrHooks[name] ||
 							(jQuery.expr.match.bool.test(name) ? boolHook : nodeHook);
 					}
 
+					// 如果 value 存在，则设置对应属性值为 value
 					if (value !== undefined) {
 
 						if (value === null) {
+							// value 为null，则删除该属性
 							jQuery.removeAttr(elem, name);
 
+						// 如果hooks存在, 且 hooks 中有 set 属性，且不为 xml，则执行该 set 方法
+            // 如果有返回值，则返回该返回值	
 						} else if (hooks && "set" in hooks && (ret = hooks.set(elem, value, name)) !== undefined) {
 							return ret;
 
+						// 处理普通情况的属性赋值	
 						} else {
 							elem.setAttribute(name, value + "");
 							return value;
 						}
 
+					// 如果 value 存在，则取出该属性对应的值 
+        	// 与上述钩子一样，处理特殊情况	
 					} else if (hooks && "get" in hooks && (ret = hooks.get(elem, name)) !== null) {
 						return ret;
 
+					// 处理普通情况	
 					} else {
 						ret = jQuery.find.attr(elem, name);
 
@@ -5914,8 +5942,11 @@
 				},
 				// 意思就是在使用attr('type',??)设置的时候就会调用这个 hooks，
 				// 用于处理 IE6-9 input 属性不可写入的问题
+				// 实现 attr 属性处理相关特殊情况
 				attrHooks: {
+					// 这个钩子只支持 type 和 value 属性的
 					type: {
+						// type 是只有 set 的
 						set: function(elem, value) {
 							if (!jQuery.support.radioValue && value === "radio" && jQuery.nodeName(elem, "input")) {
 								// Setting the type on a radio button after the value resets the value in IE6-9
@@ -6001,7 +6032,9 @@
 
 					return name;
 				}
-			}; jQuery.each(jQuery.expr.match.bool.source.match(/\w+/g), function(i, name) {
+			}; 
+
+			jQuery.each(jQuery.expr.match.bool.source.match(/\w+/g), function(i, name) {
 				var getter = jQuery.expr.attrHandle[name] || jQuery.find.attr;
 
 				jQuery.expr.attrHandle[name] = getSetInput && getSetAttribute || !ruseDefault.test(name) ?
@@ -6216,6 +6249,7 @@
 			 * Helper functions for managing events -- not part of the public interface.
 			 * Props to Dean Edwards' addEvent library for many of the ideas.
 			 */
+			// 事件操作相关处理模块
 			jQuery.event = {
 
 				global: {},
