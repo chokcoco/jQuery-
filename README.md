@@ -31,6 +31,9 @@ jQuery 源码中，中文注释是我的解读 ，才疏学浅，若有不正之
 [jQuery source viewer](http://james.padolsey.com/jquery/)
 
 ## 分模块解析
+#### jQuery处理技巧类
+[jQuery Hooks -- 钩子机制](http://blog.rodneyrehm.de/archives/11-jQuery-Hooks.html)
+
 #### Sizzle
 [jQuery里面的选择器引擎：Sizzle介绍](http://www.cnblogs.com/bigbrother1984/p/4010492.html)
 
