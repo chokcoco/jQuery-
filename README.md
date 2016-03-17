@@ -1,11 +1,11 @@
 # jQuery- v1.10.2 源码解读
 
-中文注释是我的解读 ，才疏学浅，若有不正之处，万望告知。
+jQuery 源码中，中文注释是我的解读 ，才疏学浅，若有不正之处，万望告知。
 
 [详细全文中文注释请戳这里（未完待续）](https://github.com/chokcoco/jQuery-/blob/master/jquery-1.10.2__read.js)
 
 
-部分参考资料 收集如下
+部分参考资料，收集如下
 
 ## 源码类分析：
 [jQuery源码解析（架构与依赖模块)](http://www.imooc.com/view/172)
@@ -14,13 +14,15 @@
 
 [jQuery源码分析，博客园博文，作者：nuysoft](http://www.cnblogs.com/nuysoft/category/330604.html)
 
-[# 菜鸟解读 jQuery #，前端狮子](http://www.html-js.com/article/column/136?page=2)
+[#菜鸟解读 jQuery#，前端狮子](http://www.html-js.com/article/column/136?page=2)
 
 [读懂jQuery](http://www.html-js.com/article/column/210)
 
 [jQuery源码剖析，拉风的博客](http://rapheal.sinaapp.com/tag/jquery-2/)
 
 [jQuery的deferred对象详解](http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html)
+
+[妙味课堂：一起学习jQuery源码](http://bbs.miaov.com/forum.php?mod=viewthread&tid=7385)
 
 
 ## 工具类分析
@@ -44,3 +46,12 @@
 [jQuery数据缓存$.data 的使用以及源码解析](https://segmentfault.com/a/1190000000626031)
 
 [jQ的数据管理](http://www.html-js.com/article/cainiaojiedujQ-jQdishujuguanlizhongpian)
+
+## jQuery 整体架构图
+![jQuery整体架构脑图，jQuery整体架构](https://raw.githubusercontent.com/chokcoco/jQuery-/master/mindMap/jQuery%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84.png)
+
+## 个人博客相关分析
+[【深入浅出jQuery】源码浅析--整体架构](http://www.cnblogs.com/coco1s/p/5261646.html)
+
+## License
+MIT

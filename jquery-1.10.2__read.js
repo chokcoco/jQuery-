@@ -22,12 +22,13 @@
 // 站在更高的维度去思考这些复杂的逻辑是为了处理或兼容什么，为什么要这样写，一定会有不一样的收获
 // 其次，也是因为这个原因，jQuery 源码存在许多兼容低版本的 HACK 或者逻辑十分晦涩繁琐的代码片段
 // 浏览器兼容这样的大坑极其容易让一个前端工程师不能学到编程的精髓
-// 所以不要太执着于一些边角料，即使兼容性很重要，也应该适度学习理解，当避则避
+// 所以不要太执着于一些边角料，即使兼容性很重要，也应该适度学习理解，适可而止
 
 // 用一个函数域包起来，就是所谓的沙箱
 // 在这里边 var 定义的变量，属于这个函数域内的局部变量，避免污染全局
 // 把当前沙箱需要的外部变量通过函数参数引入进来
 // 只要保证参数对内提供的接口的一致性，你还可以随意替换传进来的这个参数
+// 为了不污染全局作用域，只在后面暴露 $ 和 jQuery 这 2 个变量给外界，尽量的避开变量冲突
 (function(window, undefined) {
 
 		// Can't do this because several apps including ASP.NET trace
@@ -36,8 +37,8 @@
 		// Support: Firefox 18+
 		//"use strict";
 		var
-		// The deferred used on DOM ready
-		// 一个用在 DOM ready 上的回调函数处理变量
+			// The deferred used on DOM ready
+			// 一个用在 DOM ready 上的回调函数处理变量
 			readyList,
 
 			// A central reference to the root jQuery(document)
@@ -60,7 +61,7 @@
 			_jQuery = window.jQuery,
 
 			// Map over the $ in case of overwrite
-			// 设置别名
+			// 设置别名，同上所述
 			_$ = window.$,
 
 			// [[Class]] -> type pairs
@@ -110,9 +111,17 @@
 			},
 
 			// Used for matching numbers
+			// 匹配数字
+			// 第一个分组 (?:\d*\.|) 匹配 数字后面接一个小数点. 例如 123. 456. 或者空（注意正则最后的|）
+			// 第二个分组 (?:[eE][+-]?\d+|) 匹配 e+10 或者 E-10 这样的指数表达式 或空
+			// 需要注意的是 [+-]? 表示可匹配 +- 0 次或者 1 次，
+			// (?:\d*\.|) 可匹配空
+			// (?:[eE][+-]?\d+|) 可匹配空
+			// 所以这个正则表达式的核心匹配是 /\d+/ 匹配数字一次或者多次
 			core_pnum = /[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/.source,
 
 			// Used for splitting on whitespace
+			// \S -- 匹配任意不是空白符的字符
 			core_rnotwhite = /\S+/g,
 
 			// Make sure we trim BOM and NBSP (here's looking at you, Safari 5.0 and IE)
@@ -142,10 +151,20 @@
 			rvalidtokens = /"[^"\\\r\n]*"|true|false|null|-?(?:\d+\.|)\d+(?:[eE][+-]?\d+|)/g,
 
 			// Matches dashed string for camelizing
+			// 匹配 -ms- 前缀
 			rmsPrefix = /^-ms-/,
+
+			// [\da-z] 表示任意英文字母或者数字
 			rdashAlpha = /-([\da-z])/gi,
 
 			// Used by jQuery.camelCase as callback to replace()
+			// 在 jQuery.camelCase() 中会用到
+			// 驼峰表示法，将 font-size 形式转化为 fontSize 
+			// function camelCase(string){
+			// 	return string.replace(/-([a-z])/g,function(all,letter){
+			// 		return letter.toUpperCase();
+			// 	})
+			// }
 			fcamelCase = function(all, letter) {
 				return letter.toUpperCase();
 			},
@@ -265,7 +284,6 @@
 							// HANDLE: $(#id)
 							// 处理id -> $('#id')
 							// 反之，match[1]为false 的情况下，是上面的 match = rquickExpr.exec( selector )
-							// 
 						} else {
 							// match[2] 是匹配到的 id 名
 							elem = document.getElementById(match[2]);
@@ -276,6 +294,7 @@
 								// Handle the case where IE and Opera return items
 								// by name instead of ID
 								if (elem.id !== match[2]) {
+									// 调用 Sizzle 引擎进行更复杂的选择器查找
 									return rootjQuery.find(selector);
 								}
 
@@ -293,8 +312,9 @@
 						// 如果第一个参数是一个.className ，第二参数为一个选择器
 					} else if (!context || context.jquery) {
 						// rootjQuery 相当于 jQuery(document)
-						// 下面的return 相当于 $(context).find( selector )
+						// 下面的 return 相当于 $(context).find( selector )
 						// (如果 context 为空) jQuery(document).find( selector )
+						// 调用 Sizzle 引擎进行更复杂的选择器查找
 						return (context || rootjQuery).find(selector);
 
 						// HANDLE: $(expr, context)
@@ -304,6 +324,7 @@
 					} else {
 						// this.constructor 即是 jQuery
 						// this.constructor( context ).find( selector ) -> jQuery(context).find(selector)
+						// 调用 Sizzle 引擎进行更复杂的选择器查找
 						return this.constructor(context).find(selector);
 					}
 
@@ -365,19 +386,22 @@
 			// Take an array of elements and push it onto the stack
 			// (returning the new matched element set)
 			// 将一个 DOM 元素集合加入到 jQuery 栈
-			// 此方法在 jQuery 的 DOM 操作中被频繁的使用, 如在parent(), find(), filter()中
-			// pushStack() 方法通过改变一个 jQuery 对象的 prevObject 属性来"跟踪"链式调用中前一个方法返回的DOM结果集
-			// 当我们再链式调用 end() 方法后, 内部就返回当前 jQuery 对象的 prevObject.
+			// 此方法在 jQuery 的 DOM 操作中被频繁的使用, 如在 parent(), find(), filter() 中
+			// pushStack() 方法通过改变一个 jQuery 对象的 prevObject 属性来跟踪链式调用中前一个方法返回的 DOM 结果集合
+			// 当我们在链式调用 end() 方法后, 内部就返回当前 jQuery 对象的 prevObject 属性
 			pushStack: function(elems) {
 
 				// Build a new jQuery matched element set
-				// 构建一个新的jQuery对象，无参的 this.constructor()，只是返回引用this
+				// 构建一个新的jQuery对象，无参的 this.constructor()，只是返回引用 this
 				// jQuery.merge 把 elems 节点，合并到新的 jQuery 对象
+				// this.constructor 就是 jQuery 的构造函数 jQuery.fn.init，所以 this.constructor() 返回一个 jQuery 对象
+				// 由于 jQuery.merge 函数返回的对象是第二个函数附加到第一个上面，所以 ret 也是一个 jQuery 对象，这里可以解释为什么 pushStack 出入的 DOM 对象也可以用 CSS 方法进行操作
+				// 返回的对象的 prevObject 属性指向上一个对象，所以可以通过这个属性找到栈的上一个对象
 				var ret = jQuery.merge(this.constructor(), elems);
 
 				// Add the old object onto the stack (as a reference)
 				// 给返回的新 jQuery 对象添加属性 prevObject
-				// 所以也就是为什么通过prevObject能取到上一个合集的引用了
+				// 所以也就是为什么通过 prevObject 能取到上一个合集的引用了
 				ret.prevObject = this;
 				ret.context = this.context;
 
@@ -441,6 +465,8 @@
 			// 可以使用 end 方法来返回
 			// 这里的秘籍就是每个对象里边的 prevObject 保存着链中的上一个 jQ 对象
 			end: function() {
+				// 回溯的关键是返回 prevObject 属性
+				// 而 prevObject 属性保存了上一步操作的 jQuery 对象集合
 				return this.prevObject || this.constructor(null);
 			},
 
@@ -460,7 +486,18 @@
 		// 所以通过这个方法生成的实例 this 所指向的 仍然是 jQuery.fn(jQuery.prototype)，所以能正确访问 jQuery 类原型上的属性与方法
 		jQuery.fn.init.prototype = jQuery.fn;
 
-		// 扩展函数
+		// 扩展合并函数
+		// 合并两个或更多对象的属性到第一个对象中，jQuery 后续的大部分功能都通过该函数扩展
+		// 虽然实现方式一样，但是要注意区分用法的不一样，那么为什么两个方法指向同一个函数实现，但是却实现不同的功能呢,
+		// 阅读源码就能发现这归功于 this 的强大力量
+		// 如果传入两个或多个对象，所有对象的属性会被添加到第一个对象 target
+		// 如果只传入一个对象，则将对象的属性添加到 jQuery 对象中，也就是添加静态方法
+		// 用这种方式，我们可以为 jQuery 命名空间增加新的方法，可以用于编写 jQuery 插件
+		// 如果不想改变传入的对象，可以传入一个空对象：$.extend({}, object1, object2);
+		// 默认合并操作是不迭代的，即便 target 的某个属性是对象或属性，也会被完全覆盖而不是合并
+		// 如果第一个参数是 true，则是深拷贝
+		// 从 object 原型继承的属性会被拷贝，值为 undefined 的属性不会被拷贝
+		// 因为性能原因，JavaScript 自带类型的属性不会合并
 		jQuery.extend = jQuery.fn.extend = function() {
 			var src, copyIsArray, copy, name, options, clone,
 				target = arguments[0] || {},
@@ -548,9 +585,9 @@
 			return target;
 		};
 
-		// 一些工具函数
-		// jQuery.extend(object)  为扩展jQuery类本身.为类添加新的方法。 
-		// jQuery.fn.extend(object) 给jQuery对象添加方法。 
+		// 一些工具函数，区分 jQuery.extend(object) 和 jQuery.fn.extend(object) 区别
+		// jQuery.extend(object) 为扩展 jQuery 类本身，为类添加新的方法。 
+		// jQuery.fn.extend(object) 给 jQuery 对象添加方法 
 		jQuery.extend({
 				// Unique for each copy of jQuery on the page
 				// Non-digits removed to match rinlinejQuery
@@ -572,16 +609,20 @@
 				//  ... 其他用 $ 作为别名的库的代码
 				//  
 				noConflict: function(deep) {
+					// 判断全局 $ 变量是否等于 jQuery 变量
+					// 如果等于，则重新还原全局变量 $ 为 jQuery 运行之前的变量（存储在内部变量 _$ 中）
 					if (window.$ === jQuery) {
 						// 此时 jQuery 别名 $ 失效
 						window.$ = _$;
 					}
-
+					// 当开启深度冲突处理并且全局变量 jQuery 等于内部 jQuery，则把全局 jQuery 还原成之前的状况
 					if (deep && window.jQuery === jQuery) {
 						// 如果 deep 为 true，此时 jQuery 失效
 						window.jQuery = _jQuery;
 					}
 
+					// 这里返回的是 jQuery 库内部的 jQuery 构造函数（new jQuery.fn.init()） 
+					// 像使用 $ 一样尽情使用它吧
 					return jQuery;
 				},
 
@@ -612,7 +653,6 @@
 				},
 
 				// Handle when the DOM is ready
-				// 
 				ready: function(wait) {
 
 					// Abort if there are pending holds or we're already ready
@@ -682,6 +722,8 @@
 				},
 
 				// 确定JavaScript 对象的类型
+				// 这个方法的关键之处在于 class2type[core_toString.call(obj)]
+				// 可以使得 typeof obj 为 "object" 类型的得到更进一步的精确判断
 				type: function(obj) {
 					// 如果传入的为 null --> $.type(null)
 					// "null"
@@ -794,6 +836,7 @@
 					return jQuery.merge([], parsed.childNodes);
 				},
 
+				// 解析 JSON 字符串
 				parseJSON: function(data) {
 					// Attempt to parse using the native JSON parser first
 					if (window.JSON && window.JSON.parse) {
@@ -988,11 +1031,12 @@
 
 				// results is for internal usage only
 				// 将类数组对象转换为数组对象
+				// 此方法为内部方法
 				makeArray: function(arr, results) {
 					var ret = results || [];
 
 					if (arr != null) {
-						// 如果arr是一个类数组对象，调用merge合到返回值
+						// 如果 arr 是一个类数组对象，调用 merge 合到返回值
 						if (isArraylike(Object(arr))) {
 							jQuery.merge(ret,
 								typeof arr === "string" ?
@@ -1000,7 +1044,7 @@
 							);
 						} else {
 							// 如果不是数组，则将其放到返回数组末尾
-							// 等同于ret.push(arr);
+							// 等同于 ret.push(arr);
 							core_push.call(ret, arr);
 						}
 					}
@@ -1163,33 +1207,59 @@
 
 						// Multifunctional method to get and set values of a collection
 						// The value/s can optionally be executed if it's a function
+						// access 函数只在内部 $.fn.attr 和 $.fn.css 方法中用到
+						// example:
+						// $('#test').height(100).width(100).css('color', 'red') 或者 $('#test').attr('class','cls1') -- 都会调用 $.access()
+						// 这是一个重载方法，根据传入的参数不同，作用不同
+     				// @param elems 元素的集合[collection]，[类]数组
+     				// @param fn 函数
+     				// @param key 属性
+     				// @param value 值
+     				// @param chainable 是否可以链式调用，如果是 get 动作，为 false，如果是 set 动作，为 true
+     				//   对于 get 类方法，我们会获得一个返回值，例如字符串、数字等等，这时候是不需要链式执行的，而对于 set 类方法，通常需要如此
+     				// @param emptyGet 如果 jQuery 没有选中到元素的返回值
+     				// @param raw value 是否为原始数据，如果 raw 是 true，说明 value 是原始数据，如果是 false，说明 raw 是个函数
+     				// @returns {*}
 						access: function(elems, fn, key, value, chainable, emptyGet, raw) {
 							var i = 0,
+								// 元素的集合[collection]，[类]数组
 								length = elems.length,
 								bulk = key == null;
 
 							// Sets many values
+							// 如果参数 key 是对象，表示要设置多个属性，则遍历参数 key，遍历调用 access 方法
+							// example:
+							// $('#div').attr({data:1,def:'addd'});
 							if (jQuery.type(key) === "object") {
+								// 设置属性，支持链式调用
 								chainable = true;
 								for (i in key) {
 									jQuery.access(elems, fn, i, key[i], true, emptyGet, raw);
 								}
 
-								// Sets one value
+							// Sets one value
+							// 设置单个属性
+							// example:
+							// $('#box').attr('customvalue','abc')
+             	// $('#box').attr('customvalue',function (value) {});
 							} else if (value !== undefined) {
+								// 设置属性，支持链式调用
 								chainable = true;
 
 								if (!jQuery.isFunction(value)) {
 									raw = true;
 								}
 
+								// 相当于
+ 								// if (key == null && value !== undefined)
 								if (bulk) {
 									// Bulk operations run against the entire set
 									if (raw) {
 										fn.call(elems, value);
 										fn = null;
 
-										// ...except when executing function values
+									// ...except when executing function values
+									// 如果key有值的话，这里的 bulk 是为了节省一个变量，将 fn 用 bulk 存起来，然后封装 fn 的调用
 									} else {
 										bulk = fn;
 										fn = function(elem, key, value) {
@@ -1198,13 +1268,25 @@
 									}
 								}
 
+								// 如果 fn 存在，掉调用每一个元素，无论 key 是否有值，都会走到这个判断，执行 set 动作
 								if (fn) {
 									for (; i < length; i++) {
+
+								    // 如果 value 是原始数据，就取 value，如果是个函数，就调用这个函数取值
+                    // $('#box').attr('abc',function (index,value) { });
+                    // index 指向当前元素的索引,value 指向 oldValue
+                    // 先调用 jQuery.attr(elements[i],key) 取到当前的值，然后调用传入的fn值
 										fn(elems[i], key, raw ? value : value.call(elems[i], i, fn(elems[i], key)));
 									}
 								}
 							}
 
+			         // 如果 chainable 为 true，说明是个 set 方法，就返回 elems
+			         // 否则说明是 get 方法
+			         // 1.如果 bulk 是个 true，说明没有 key 值，调用 fn，将 elems 传进去
+			         // 2.如果 bulk 是个 false，说明 key 有值，然后判断元素的长度是否大于 0
+			         //    2.1 如果大于 0，调用 fn，传入 elems[0] 和 key ，完成 get
+			         //    2.2 如果为 0，说明传参有问题，返回指定的空值 emptyGet
 							return chainable ?
 								elems :
 
@@ -1324,8 +1406,8 @@
 
 				// Populate the class2type map
 			};
-			// typeof并不能区分出它是Array类型，jQuery为了扩展typeof的表达力，因此扩展了type方法
-			// 针对一些特殊的对象（例如null，window，RegExp）也进行精准的类型判断
+			// typeof 并不能区分出它是 Array 、RegExp 等 object 类型，jQuery 为了扩展 typeof 的表达力，因此有了 $.type 方法
+			// 针对一些特殊的对象（例如 null，Array，RegExp）也进行精准的类型判断
 			// 判断类型前，将常见类型打表，先存于一个 Hash 表 class2type 里边
 			jQuery.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(i, name) {
 				class2type["[object " + name + "]"] = name.toLowerCase();
@@ -1354,6 +1436,8 @@
 			// 此对象为 document 的 jQuery 对象，所有的 jQuery 对象最终都将指向它
 			// 可以在chrome dev tools中观察 prevObject
 			rootjQuery = jQuery(document);
+
+
 			/*!
 			 * Sizzle CSS Selector Engine v1.10.2
 			 * http://sizzlejs.com/
@@ -1364,6 +1448,7 @@
 			 *
 			 * Date: 2013-07-03
 			 */
+			// 下面一长篇开始将是 Sizzle 引擎
 			(function(window, undefined) {
 
 				// 一些变量，下文会用到，可以先初略了解
@@ -3978,7 +4063,7 @@
 				return self;
 			};
 
-			// 当 jQuery.extend 只有一个参数的时候，其实就是对jQuery静态方法的一个扩展
+			// 当 jQuery.extend 只有一个参数的时候，其实就是对 jQuery 静态方法的一个扩展
 			// jQuery 整体架构对 extend 的解析
 			// http://www.cnblogs.com/aaronjs/p/3278578.html
 			jQuery.extend({
@@ -4275,7 +4360,8 @@
 				a.style.cssText = "top:1px;float:left;opacity:.5";
 
 				// Test setAttribute on camelCase class. If it works, we need attrFixes when doing get/setAttribute (ie6/7)
-				// 测试 setAttribute 是否需要传入驼峰表示法的参数
+				// 测试是否支持 setAttribute 方法
+				// setAttribute 方法需要传入驼峰表示法的参数
 				// 在 IE67 中要获得单个属性的值，就必须将属性名转为驼峰形式
 				// element.currentStyle.getAttribute(camelCase(style)) -- http://www.cnblogs.com/coco1s/p/5210667.html
 				support.getSetAttribute = div.className !== "t";
@@ -4356,6 +4442,8 @@
 				// (WebKit marks them as disabled)
 				// chrome23 已修复
 				select.disabled = true;
+				// 如果预设的 select 元素中 option 元素不会自动标识为 disabled（oldIE）
+				// 那么 optDisabled 会被设定为 true
 				support.optDisabled = !opt.disabled;
 
 				// Support: IE<9
@@ -4370,6 +4458,8 @@
 				// getAttribute 检测
 				input = document.createElement("input");
 				input.setAttribute("value", "");
+
+				// 是否支持 input 的 getAttribute("value")
 				support.input = input.getAttribute("value") === "";
 
 				// Check if an input maintains its value after becoming a radio
@@ -4884,7 +4974,7 @@
 				},
 
 				// For internal use only.
-				// 添加一个仅供内部使用的数据
+				// 添加或读取一个仅供内部使用的数据
 				_data: function(elem, name, data) {
 					return internalData(elem, name, data, true);
 				},
@@ -5071,64 +5161,118 @@
 			// $.data() $().data() 结束
 			// --------------------------------
 
+
+			// jQuery 的队列管理
+			// 这里拓展的 3 个方法是底层方法，是其内部调用的
 			jQuery.extend({
+				// 静态的底层方法实现入列
+				// 方法重载，当只传入 queue(elem, type) 表示返回挂载在 elem 上名字为 type 的队列信息
+				// 传入 queue(elem, type, data) 表示 data 入列 
 				queue: function(elem, type, data) {
+					// 最后返回的队列信息
 					var queue;
 
+					// elem 存在
 					if (elem) {
+						// 拼接队列名，为
+						// typequeue 或者 fxqueue，不传入队列名则默认为后者
+						// 当是默认队列时，也就是 animate 操作时，队列名为 fxqueue
 						type = (type || "fx") + "queue";
+
+						// jQuery._data() 添加或读取一个仅供内部使用的数据
+						// 这里是取出队列
 						queue = jQuery._data(elem, type);
 
 						// Speed up dequeue by getting out quickly if this is just a lookup
+						// 如果有 data ，表示是将 data 入列，反之是取队列，返回上面已经取到的队列即可
 						if (data) {
+							// 查看 queue 是否已经存在，
 							if (!queue || jQuery.isArray(data)) {
+								// 不存在，新建一个队列，并将数据以数组形式 jQuery.makeArray(data) 
+								// 使用 jQuery._data 存储起来
+								// jQuery.makeArray() -- 将类似数组或者不是数组的东西强制转换成一个数组然后返回
 								queue = jQuery._data(elem, type, jQuery.makeArray(data));
 							} else {
+								// 已经有该队列了，直接 push 入列
 								queue.push(data);
 							}
 						}
+
+						// 返回队列
+						// 这个方法主要注意方法的重载，当传入 data 和不传 data 的两种处理方法
+						// 以及队列的存储使用了内部方法 $._data()
 						return queue || [];
 					}
 				},
 
+				// 出列，在匹配的元素上执行队列中的下一个函数
 				dequeue: function(elem, type) {
+					// 队列名，如果没有传入 type 参数，则赋予默认的队列名 “fx”，也就是 animate 操作
 					type = type || "fx";
 
+					// 使用 jQuery.queue(elem, type) 取到队列
+					// 上文提到了，当 jQuery.queue(elem, type) 这种传两个参数（不带 data ）的时候，是 get 操队列作
 					var queue = jQuery.queue(elem, type),
+
+						// 队列长度，注意使用 jQuery.queue(elem, type) 返回的必然是个数组
 						startLength = queue.length,
+
+						// 弹出队列头部 data （FIFO，先入先出）
 						fn = queue.shift(),
+
+ 						// hooks 其实是元素 elem 在数据缓存中的一个属性对象，
+ 						// 如果我们调用的是 $.dequeue(document,"q1") 的话，
+ 						// 那么属性对象名就是 q1queueHooks，
+ 						// 属性值是 {empty: jQuery.Callbacks("once memory").add(function() { data_priv.remove( elem, [ type + "queue", key ] );})}
+ 						// 因此你使用 hooks.empty，其实就是 q1queueHooks.empty
 						hooks = jQuery._queueHooks(elem, type),
+
+						// 预处理，触发当前队列的下一个函数
 						next = function() {
 							jQuery.dequeue(elem, type);
 						};
 
 					// If the fx queue is dequeued, always remove the progress sentinel
+	        // 如果取到的是一个占位符，则舍弃再从队列取出一个
+	        // 只有动画队列会设置占位符，表示动画正在执行中
 					if (fn === "inprogress") {
 						fn = queue.shift();
 						startLength--;
 					}
 
+					// 是否有 fn
 					if (fn) {
 
 						// Add a progress sentinel to prevent the fx queue from being
 						// automatically dequeued
+						// 当是默认队列时，也就是 animate 操作时，就会先往队列的前面添加 inprogress 占位符
 						if (type === "fx") {
 							queue.unshift("inprogress");
 						}
 
 						// clear up the last queue stop function
 						delete hooks.stop;
+
+						// 执行 fn ，执行完之后，就会调用 next 方法，进行出队
 						fn.call(elem, next, hooks);
 					}
 
+					// 当队列结束后，清理数据缓存中队列数据
 					if (!startLength && hooks) {
+						// 这里执行 fire 方法，就会触发 add 添加的方法，也就是data_priv.remove( elem, [ type + "queue", key ] );
+						// 把缓存数据中的所有队列信息，以及 typequeueHooks 一起删除掉
 						hooks.empty.fire();
 					}
 				},
 
 				// not intended for public consumption - generates a queueHooks object, or returns the current one
+				// 产生一个 queueHooks 对象，或者是返回当前有的那个
 				_queueHooks: function(elem, type) {
+					// key 名为 type + "queueHooks"
 					var key = type + "queueHooks";
+
+					// jQuery._data(elem, key) 存在，则直接返回
+					// 否则，添加一个 keyqueueHooks 对象
 					return jQuery._data(elem, key) || jQuery._data(elem, key, {
 						empty: jQuery.Callbacks("once memory").add(function() {
 							jQuery._removeData(elem, type + "queue");
@@ -5137,62 +5281,114 @@
 					});
 				}
 			});
-
+			
+			// jQuery原型方法，供 jQuery 对象使用
+			// $().queue()
 			jQuery.fn.extend({
+				// 函数入队，返回队列
+				// 注意方法的重载，传入 data 参数与否的区别（set or get）
 				queue: function(type, data) {
+					// 与 arguments.length 对比
+					// arguments.length -- 传入参数的个数
 					var setter = 2;
 
+					// 如果 type 不是 "string" 类型
+					// 也就是传入的是单个参数
 					if (typeof type !== "string") {
 						data = type;
 						type = "fx";
 						setter--;
 					}
 
+					// 传参数少于 setter
+					// get -- 取队列
 					if (arguments.length < setter) {
 						return jQuery.queue(this[0], type);
 					}
 
+					// 运行到这里说明是 set 队列
+					// 设置 data
 					return data === undefined ?
+						// data 为 undefine
+						// 返回 this
 						this :
+
+						// data 不为 undefine
+						// 遍历 this
+						// 这里的是 this 指的是 jQuery 对象,是一个类数组对象,each 是遍历操作
 						this.each(function() {
+							// data 入列
+							// 这里 this 指代单个 DOM 元素，为每个对象添加 data 到队列中
 							var queue = jQuery.queue(this, type, data);
 
 							// ensure a hooks for this queue
 							jQuery._queueHooks(this, type);
 
+              // 如果队列顶部不是占位符 inprogress 且 type 是 fx 则调用出队列
+              // 这里运动的情况,如果没有动画函数正在执行,则立刻出队并执行动画函数
+              // 这里看起来是不是有点像 callbacks 的 memory 模式呢 add 的同时被 fireWidth
 							if (type === "fx" && queue[0] !== "inprogress") {
 								jQuery.dequeue(this, type);
 							}
 						});
 				},
+				// 出列，执行队列中的下一个函数
 				dequeue: function(type) {
+					// 这里的是 this 指的是 jQuery 对象,是一个类数组对象,each 是遍历操作
 					return this.each(function() {
+						// 调用内部 jQuery.dequeue()
 						jQuery.dequeue(this, type);
 					});
 				},
 				// Based off of the plugin by Clint Helfers, with permission.
 				// http://blindsignals.com/index.php/2009/07/jquery-delay/
+				// 设置延迟出队
+				// 第一个参数 time 是延迟的时间，第二个参数 type（队列的名字） 是哪个队列延迟
+				// 举个例子说下 delay 方法的作用：
+				// $(this).animate({width:300},2000).delay(2000).animate({left:300},2000)
+				// 这个代码的意思是：第一个定时器函数执行结束后，会延迟两秒钟，才会执行第二个定时器函数
 				delay: function(time, type) {
-					time = jQuery.fx ? jQuery.fx.speeds[time] || time : time;
+					// jQuery.fx.speeds = {slow: 600,fast: 200,_default: 400}
+					// 意思就是说，你 delay 里面是否写了 slow ， fast ，或 _default 
+					// 如果是，就直接调用默认的值，如果传入的是数字，那么就只用数字
+					time =  ? jQuery.fx.speeds[time] || time : time;
+
+					// 是否传入了 type 参数
+					// 没传入则使用默认 fx ，表示动画队列
 					type = type || "fx";
 
 					return this.queue(type, function(next, hooks) {
+						// 延迟 time 秒，再进行出队
+						// 意思就是 time 秒后，第二个定时器函数才会执行
 						var timeout = setTimeout(next, time);
+						// 这个方法会清除定时器，如果下文执行
+						// next 方法就不会执行，也就不会出队了
 						hooks.stop = function() {
 							clearTimeout(timeout);
 						};
 					});
 				},
+				// 清除队列，使用的方法是置空队列
+				// 传入数组，会覆盖队列的原数组
 				clearQueue: function(type) {
 					return this.queue(type || "fx", []);
 				},
 				// Get a promise resolved when queues of a certain type
 				// are emptied (fx is the type by default)
+				// type 是指队列的名字，如果此 type 的队列全部出队后，就会执行 done 添加的方法
+				// 例子：
+				// $(this).animate({width:300},2000).animate({left:300},2000);
+				// $(this).promise().done(function(){alert(3)});
+				// 这句代码的意思是，等上面两个定时器函数都执行结束后（因为他们默认处理的都是 fx 队列）。才会执行弹出 alert(3) 的函数
 				promise: function(type, obj) {
 					var tmp,
 						count = 1,
+
+						// 新建一个 deferred 对象
 						defer = jQuery.Deferred(),
 						elements = this,
+
+						// 参数的长度
 						i = this.length,
 						resolve = function() {
 							if (!(--count)) {
@@ -5200,51 +5396,103 @@
 							}
 						};
 
+					// 传入的是单个参数
 					if (typeof type !== "string") {
 						obj = type;
 						type = undefined;
 					}
+
+					// 如果没传入队列名，就用 fx 默认队列 
 					type = type || "fx";
 
+					// 执行一次
 					while (i--) {
+						// 去 queueHooks 缓存系统找跟这个元素有关的数据
 						tmp = jQuery._data(elements[i], type + "queueHooks");
+
+						// 如果存在，就证明队列中有定时器函数要执行
+						// 进入if语句
 						if (tmp && tmp.empty) {
 							count++;
 							tmp.empty.add(resolve);
 						}
 					}
+
+					// 这里会先执行一次 resolve 方法，count--
 					resolve();
+
+					// 返回这个延迟对象
+					// 如果感觉这个方法没看懂，需要回头先弄清楚 $.Callbacks() 和 $.Deferred() 对象的作用
 					return defer.promise(obj);
 				}
 			});
+
+			
+			// 下面一块是关于元素属性的操作 -- attr() 、prop() 等
 			var nodeHook, boolHook,
+				// \t -- 制表符，Tab
+				// \r -- 回车符
+				// \n -- 换行符
+				// \f -- 换页符 
 				rclass = /[\t\r\n\f]/g,
+
+				// \r -- 回车符
+				// 匹配单个回车
 				rreturn = /\r/g,
+
+				// 匹配一些 input 结构
 				rfocusable = /^(?:input|select|textarea|button|object)$/i,
+
+				// a | area
 				rclickable = /^(?:a|area)$/i,
+
+				// checked | selected
 				ruseDefault = /^(?:checked|selected)$/i,
+
+				// jQuery.support.getSetAttribute 测试是否支持 setAttribute 方法
+				// setAttribute 用于在 IE6\7 下获取元素的单个 CSS 属性值  
 				getSetAttribute = jQuery.support.getSetAttribute,
+
+				// 是否支持 input 的 getAttribute("value")
 				getSetInput = jQuery.support.input;
 
+			// jQuery 对象方法拓展	
 			jQuery.fn.extend({
+				// 获取匹配的元素集合中的第一个元素的属性的值，或设置每一个匹配元素的一个或多个属性
+				// 调用了 jQuery.access 方法实现
 				attr: function(name, value) {
 					return jQuery.access(this, jQuery.attr, name, value, arguments.length > 1);
 				},
 
+				// 清除某个属性（可批量）
 				removeAttr: function(name) {
 					return this.each(function() {
+						// 调用了 jQuery.removeAttr()
 						jQuery.removeAttr(this, name);
 					});
 				},
 
+				// .prop() 方法只获得第一个匹配元素的属性值 
+				// 如果元素上没有该属性，或者如果没有匹配的元素。那么该方法会返回 undefined 值
+				// 与 $.attr() 的区别
+				// 具有 true 和 false 两个属性的属性，如 checked, selected 或者 disabled 使用 prop()，其他的使用 attr()
 				prop: function(name, value) {
 					return jQuery.access(this, jQuery.prop, name, value, arguments.length > 1);
 				},
 
+				// 为集合中匹配的元素删除一个属性
 				removeProp: function(name) {
 					name = jQuery.propFix[name] || name;
+
+					// 遍历 this 集合
 					return this.each(function() {
 						// try/catch handles cases where IE balks (such as removing a property on window)
+						// 若尝试移除 DOM 元素或 window 对象上一些内建的 属性（ property ） ，浏览器可能会产生错误
+						// 如果真的那么做了，那么 jQuery 首先会将 属性（ property ） 设置成 undefined ，然后忽略任何浏览器产生的错误
+						// 一般来说,只需要移除自定义的 属性（ property ） ，而不是移除内建的（原生的）属性（ property ）
+						// 所以不要使用此方法来删除原生的属性（ property ）
+						// 比如checked, disabled, 或者 selected ，这将完全移除该属性，一旦移除，不能再次被添加到元素上
+						// 使用 .prop() 来设置这些属性设置为 false 代替
 						try {
 							this[name] = undefined;
 							delete this[name];
@@ -5252,114 +5500,163 @@
 					});
 				},
 
+				// 向被选元素添加一个或多个类
 				addClass: function(value) {
 					var classes, elem, cur, clazz, j,
 						i = 0,
+						// 要操作的被选元素集合
 						len = this.length,
+						// 检测value是否为字符串
 						proceed = typeof value === "string" && value;
 
+					// 如果 value 是函数	
 					if (jQuery.isFunction(value)) {
+						// 那么逐个遍历现有元素，递归addClass方法
 						return this.each(function(j) {
 							jQuery(this).addClass(value.call(this, j, this.className));
 						});
 					}
 
+					// 如果是个字符串，那就执行正真的添加
 					if (proceed) {
 						// The disjunction here is for better compressibility (see removeClass)
+						// core_rnotwhite = /\S+/g ，匹配任意不是空白符的字符串
+						// 将 value 用空格分开成一个数组，相当于 classes = (value || "").split("/\s+/")
 						classes = (value || "").match(core_rnotwhite) || [];
 
+						// 遍历被选元素集合
 						for (; i < len; i++) {
 							elem = this[i];
+
+							// 检测是否为 HTMLElement
+							// nodeType === 1 --  Element
 							cur = elem.nodeType === 1 && (elem.className ?
+								// rclass = /[\t\r\n\f]/g
+								// 去掉换行换页什么的，两边加上空格，防止出错
 								(" " + elem.className + " ").replace(rclass, " ") :
+								// 如果没有class的话，那就等于一个空格
 								" "
 							);
 
 							if (cur) {
 								j = 0;
+								// 遍历所有的classes
 								while ((clazz = classes[j++])) {
+									// 当前元素没有要添加的 Class，才加入
 									if (cur.indexOf(" " + clazz + " ") < 0) {
 										cur += clazz + " ";
 									}
 								}
+								// 设置 className，去掉首尾空格
 								elem.className = jQuery.trim(cur);
 
 							}
 						}
 					}
 
+					// 返回 this，支持链式操作
 					return this;
 				},
 
+				// 移除当前元素集合指定 Class
 				removeClass: function(value) {
 					var classes, elem, cur, clazz, j,
 						i = 0,
 						len = this.length,
 						proceed = arguments.length === 0 || typeof value === "string" && value;
 
+					// 传入的如果是方法，遍历移除	
 					if (jQuery.isFunction(value)) {
 						return this.each(function(j) {
 							jQuery(this).removeClass(value.call(this, j, this.className));
 						});
 					}
+
+					// 传入的是字符串
 					if (proceed) {
+						// The disjunction here is for better compressibility (see removeClass)
+						// core_rnotwhite = /\S+/g ，匹配任意不是空白符的字符串
+						// 将 value 用空格分开成一个数组，相当于 classes = (value || "").split("/\s+/")
 						classes = (value || "").match(core_rnotwhite) || [];
 
 						for (; i < len; i++) {
 							elem = this[i];
 							// This expression is here for better compressibility (see addClass)
+							// 检测是否为 HTMLElement
 							cur = elem.nodeType === 1 && (elem.className ?
+								// 去掉换行换页什么的，两边加上空格，防止出错
 								(" " + elem.className + " ").replace(rclass, " ") :
 								""
 							);
 
+							// cur 不为空
 							if (cur) {
 								j = 0;
+								// 遍历 classes ，如果有则删除
 								while ((clazz = classes[j++])) {
 									// Remove *all* instances
 									while (cur.indexOf(" " + clazz + " ") >= 0) {
 										cur = cur.replace(" " + clazz + " ", " ");
 									}
 								}
+								// 重置 className
 								elem.className = value ? jQuery.trim(cur) : "";
 							}
 						}
 					}
 
+					// 返回 this，支持链式操作
 					return this;
 				},
 
+		    // 设置或移除被选元素的一个或多个类进行切换
+		    // 该方法检查每个元素中指定的类。如果不存在则添加类，如果已设置则删除之。这就是所谓的切换效果。
+		    // @param value String:类名  Function:规定返回需要添加或删除的一个或多个类名的函数 $(selector).toggleClass(function(index,class,switch),switch)
+		    // @param stateVal 规定是否添加 (true) 或移除 (false) 类为 true 不存在,则添加。为 false ,已存在则删除
+		    // @returns {*}
 				toggleClass: function(value, stateVal) {
+					// 传入类名类型
 					var type = typeof value;
 
+					// 规定是否添加 (true) 或移除 (false) 类为 true 不存在,则添加。为 false ,已存在则删除
 					if (typeof stateVal === "boolean" && type === "string") {
 						return stateVal ? this.addClass(value) : this.removeClass(value);
 					}
 
+					// 如果 value 的类型是 function
 					if (jQuery.isFunction(value)) {
 						return this.each(function(i) {
 							jQuery(this).toggleClass(value.call(this, i, this.className, stateVal), stateVal);
 						});
 					}
 
+					// 遍历 this 元素合集
 					return this.each(function() {
+						// 如果是传入单个参数，且参数是 string 类型
 						if (type === "string") {
 							// toggle individual class names
 							var className,
 								i = 0,
 								self = jQuery(this),
+								// core_rnotwhite = /\S+/g ，匹配任意不是空白符的字符串
+								// 将 value 用空格分开成一个数组，相当于 classes = (value || "").split("/\s+/")
 								classNames = value.match(core_rnotwhite) || [];
 
+							// 如果传入了多个 Class ，遍历class	
 							while ((className = classNames[i++])) {
 								// check each className given, space separated list
+								// 查询是否已经有当前遍历到的这个 Class，有则删除，
 								if (self.hasClass(className)) {
 									self.removeClass(className);
+								// 反之添加		
 								} else {
 									self.addClass(className);
 								}
 							}
 
-							// Toggle whole class name
+						// Toggle whole class name
+						// 如果只传入了第二个参数 || 或者value是false
+            // 则对整个 class 字符串执行设置和取消
 						} else if (type === core_strundefined || type === "boolean") {
 							if (this.className) {
 								// store className if set
@@ -5375,25 +5672,40 @@
 					});
 				},
 
+				// 在元素的 class 属性上是否存在指定的 selector 
+				// 由于可能是在元素的集合上查找，有一项存在就返回 true,否则就返回 false
 				hasClass: function(selector) {
+					// 传入的 selector 首尾添加空格
 					var className = " " + selector + " ",
 						i = 0,
 						l = this.length;
+
+					// 遍历元素的合集	
 					for (; i < l; i++) {
+						// 首先确保 this 是 Element 元素
+						// 并且 selector 存在于 this 的 ClassName 中
 						if (this[i].nodeType === 1 && (" " + this[i].className + " ").replace(rclass, " ").indexOf(className) >= 0) {
 							return true;
 						}
 					}
 
+					// 否则返回 false
 					return false;
 				},
 
+				// 获取匹配的元素集合中第一个元素的当前值
+				// 或设置匹配的元素集合中每个元素的值
+				// val 方法主要做的就是对于 option 和 select 的兼容性的处理，
+				// 正常情况下直接取 Element.vlaue 进行操作，亮点依旧在钩子技术和参数重载上
 				val: function(value) {
 					var ret, hooks, isFunction,
 						elem = this[0];
 
+					// 如果没有传入参数	
 					if (!arguments.length) {
+						// elem = this[0]
 						if (elem) {
+							// 
 							hooks = jQuery.valHooks[elem.type] || jQuery.valHooks[elem.nodeName.toLowerCase()];
 
 							if (hooks && "get" in hooks && (ret = hooks.get(elem, "value")) !== undefined) {
@@ -5412,6 +5724,7 @@
 						return;
 					}
 
+					// 判断 value 是否是函数
 					isFunction = jQuery.isFunction(value);
 
 					return this.each(function(i) {
@@ -5449,22 +5762,34 @@
 			});
 
 			jQuery.extend({
+				// 
 				valHooks: {
+					// 当你获取 option 元素的 value 属性值时，
+					// 如果没有对此 option 显式设置 value 值，获取到的值是 option 的 text ，也就是 option 的文本
+					// 但是 IE6-7 下获取到的值是""
 					option: {
 						get: function(elem) {
 							// Use proper attribute retrieval(#6932, #12072)
+							// 在 IE6-7 下，val 是一个 object
 							var val = jQuery.find.attr(elem, "value");
+							
+							// 兼容 IE 的处理
 							return val != null ?
 								val :
 								elem.text;
 						}
 					},
 					select: {
+						// 当 select 是单选时，获取的 value 值，就是你选择的那个 option 的值，
+						// 如果是多选，获取值时，就是你选择的所有 option 的值的数组形式
 						get: function(elem) {
 							var value, option,
+								// select 的所有 option 的集合
 								options = elem.options,
+								// 当前选择的 option 的索引值
 								index = elem.selectedIndex,
 								one = elem.type === "select-one" || index < 0,
+								// 如果是单选框，values 为 null，如果是多选，values = []
 								values = one ? null : [],
 								max = one ? index + 1 : options.length,
 								i = index < 0 ?
@@ -5472,13 +5797,21 @@
 								one ? index : 0;
 
 							// Loop through all the selected options
+							// 循环所有 options 选项
+							// 单选，循环一次，多选，循环多次
 							for (; i < max; i++) {
+								// 拿到当前循环到的项
 								option = options[i];
 
 								// oldIE doesn't update selected after form reset (#2551)
+								// IE6-9 下，点击 reset 按钮时，option 的 selected 不会恢复默认值
+								// 其他浏览器会恢复所有 option 的 selected 的默认值
 								if ((option.selected || i === index) &&
 									// Don't return options that are disabled or in a disabled optgroup
+									// jQuery.support.optDisabled -- 
+									// 如果 option 被设置了 disabled，那么获取 option 的值时，是获取不到的
 									(jQuery.support.optDisabled ? !option.disabled : option.getAttribute("disabled") === null) &&
+									// 如果 option 的父元素被设置了 disabled，并且父元素是 optgroup，那么也获取不到
 									(!option.parentNode.disabled || !jQuery.nodeName(option.parentNode, "optgroup"))) {
 
 									// Get the specific value for the option
@@ -5536,27 +5869,37 @@
 					// All attributes are lowercase
 					// Grab necessary hook if one is defined
 					if (nType !== 1 || !jQuery.isXMLDoc(elem)) {
+						// 转化为小写
 						name = name.toLowerCase();
+						// 获取相应的 hook, 这里主要是获取 attrHooks,
 						hooks = jQuery.attrHooks[name] ||
 							(jQuery.expr.match.bool.test(name) ? boolHook : nodeHook);
 					}
 
+					// 如果 value 存在，则设置对应属性值为 value
 					if (value !== undefined) {
 
 						if (value === null) {
+							// value 为null，则删除该属性
 							jQuery.removeAttr(elem, name);
 
+						// 如果hooks存在, 且 hooks 中有 set 属性，且不为 xml，则执行该 set 方法
+            // 如果有返回值，则返回该返回值	
 						} else if (hooks && "set" in hooks && (ret = hooks.set(elem, value, name)) !== undefined) {
 							return ret;
 
+						// 处理普通情况的属性赋值	
 						} else {
 							elem.setAttribute(name, value + "");
 							return value;
 						}
 
+					// 如果 value 存在，则取出该属性对应的值 
+        	// 与上述钩子一样，处理特殊情况	
 					} else if (hooks && "get" in hooks && (ret = hooks.get(elem, name)) !== null) {
 						return ret;
 
+					// 处理普通情况	
 					} else {
 						ret = jQuery.find.attr(elem, name);
 
@@ -5597,9 +5940,13 @@
 						}
 					}
 				},
-
+				// 意思就是在使用attr('type',??)设置的时候就会调用这个 hooks，
+				// 用于处理 IE6-9 input 属性不可写入的问题
+				// 实现 attr 属性处理相关特殊情况
 				attrHooks: {
+					// 这个钩子只支持 type 和 value 属性的
 					type: {
+						// type 是只有 set 的
 						set: function(elem, value) {
 							if (!jQuery.support.radioValue && value === "radio" && jQuery.nodeName(elem, "input")) {
 								// Setting the type on a radio button after the value resets the value in IE6-9
@@ -5668,6 +6015,7 @@
 			});
 
 			// Hooks for boolean attributes
+			// 
 			boolHook = {
 				set: function(elem, value, name) {
 					if (value === false) {
@@ -5684,7 +6032,9 @@
 
 					return name;
 				}
-			}; jQuery.each(jQuery.expr.match.bool.source.match(/\w+/g), function(i, name) {
+			}; 
+
+			jQuery.each(jQuery.expr.match.bool.source.match(/\w+/g), function(i, name) {
 				var getter = jQuery.expr.attrHandle[name] || jQuery.find.attr;
 
 				jQuery.expr.attrHandle[name] = getSetInput && getSetAttribute || !ruseDefault.test(name) ?
@@ -5899,6 +6249,7 @@
 			 * Helper functions for managing events -- not part of the public interface.
 			 * Props to Dean Edwards' addEvent library for many of the ideas.
 			 */
+			// 事件操作相关处理模块
 			jQuery.event = {
 
 				global: {},
