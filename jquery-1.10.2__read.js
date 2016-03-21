@@ -5428,7 +5428,7 @@
 			});
 
 			
-			// 下面一块是关于元素属性的操作 -- attr() 、prop() 等
+			// 下面一块是关于 DOM元素 属性的操作 -- attr() 、prop() 、 val() 等
 			var nodeHook, boolHook,
 				// \t -- 制表符，Tab
 				// \r -- 回车符
@@ -5762,7 +5762,8 @@
 			});
 
 			jQuery.extend({
-				// 
+				// 定义一些钩子函数，用于处理一些特殊情况，避免在函数中使用大量的 else if
+				// val钩子
 				valHooks: {
 					// 当你获取 option 元素的 value 属性值时，
 					// 如果没有对此 option 显式设置 value 值，获取到的值是 option 的 text ，也就是 option 的文本
@@ -5833,17 +5834,22 @@
 						set: function(elem, value) {
 							var optionSet, option,
 								options = elem.options,
+								// 把 value 转换成数组
 								values = jQuery.makeArray(value),
 								i = options.length;
 
 							while (i--) {
 								option = options[i];
+								// 判断 select 的子元素 option 的 value 是否在 values 数组中，
+								// 如果在，就会把这个 option 选中
 								if ((option.selected = jQuery.inArray(jQuery(option).val(), values) >= 0)) {
 									optionSet = true;
 								}
 							}
 
 							// force browsers to behave consistently when non-matching value is set
+							// 如果 select 下的 option 的 value 值没有一个等于 value 的
+							// 那么就让 select 的选择索引值赋为 -1，让 select 框中没有任何值
 							if (!optionSet) {
 								elem.selectedIndex = -1;
 							}
@@ -5945,6 +5951,8 @@
 				// 实现 attr 属性处理相关特殊情况
 				attrHooks: {
 					// 这个钩子只支持 type 和 value 属性的
+					// 意思就是在使用 attr('type',??) 设置的时候就会调用这个hooks
+					// 用于处理 IE6-9 input 属性不可写入的问题
 					type: {
 						// type 是只有 set 的
 						set: function(elem, value) {
@@ -5996,7 +6004,9 @@
 					}
 				},
 
+				// $().prop() 方法的钩子
 				propHooks: {
+					// 
 					tabIndex: {
 						get: function(elem) {
 							// elem.tabIndex doesn't always return the correct value when it hasn't been explicitly set
@@ -6252,8 +6262,10 @@
 			// 事件操作相关处理模块
 			jQuery.event = {
 
+				// 
 				global: {},
 
+				// 事件的 add 方法
 				add: function(elem, types, handler, data, selector) {
 					var tmp, events, t, handleObjIn,
 						special, eventHandle, handleObj,
