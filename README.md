@@ -31,6 +31,9 @@ jQuery 源码中，中文注释是我的解读 ，才疏学浅，若有不正之
 [jQuery source viewer](http://james.padolsey.com/jquery/)
 
 ## 分模块解析
+#### jQuery处理技巧类
+[jQuery Hooks -- 钩子机制](http://blog.rodneyrehm.de/archives/11-jQuery-Hooks.html)
+
 #### Sizzle
 [jQuery里面的选择器引擎：Sizzle介绍](http://www.cnblogs.com/bigbrother1984/p/4010492.html)
 
@@ -46,6 +49,9 @@ jQuery 源码中，中文注释是我的解读 ，才疏学浅，若有不正之
 [jQuery数据缓存$.data 的使用以及源码解析](https://segmentfault.com/a/1190000000626031)
 
 [jQ的数据管理](http://www.html-js.com/article/cainiaojiedujQ-jQdishujuguanlizhongpian)
+
+#### Dom操作
+[钩子机制 - 属性操作](http://www.cnblogs.com/aaronjs/p/3387906.html)
 
 ## jQuery 整体架构图
 ![jQuery整体架构脑图，jQuery整体架构](https://raw.githubusercontent.com/chokcoco/jQuery-/master/mindMap/jQuery%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84.png)
