@@ -87,6 +87,7 @@
 
 			// Save a reference to some core methods
 			// 定义这几个变量的作用如上所述
+			// 存储了一些常用的核心方法
 			core_concat = core_deletedIds.concat,
 			core_push = core_deletedIds.push,
 			core_slice = core_deletedIds.slice,
@@ -360,7 +361,7 @@
 			// jQuery 对象里边选取的DOM节点数目，有了这个属性就已经像“半个”数组了，:)
 			length: 0,
 
-			// 将 jQuery 对象转换成数组类型，这里返回的结果就真的是Array类型了
+			// 将 jQuery 对象转换成数组类型，这里返回的结果就真的是 Array 类型了
 			// 相当于 Array.prototype.slice.call(this)
 			// slice() 方法：https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
 			toArray: function() {
@@ -1408,7 +1409,7 @@
 			};
 			// typeof 并不能区分出它是 Array 、RegExp 等 object 类型，jQuery 为了扩展 typeof 的表达力，因此有了 $.type 方法
 			// 针对一些特殊的对象（例如 null，Array，RegExp）也进行精准的类型判断
-			// 判断类型前，将常见类型打表，先存于一个 Hash 表 class2type 里边
+			// 运用了钩子机制，判断类型前，将常见类型打表，先存于一个 Hash 表 class2type 里边
 			jQuery.each("Boolean Number String Function Array Date RegExp Object Error".split(" "), function(i, name) {
 				class2type["[object " + name + "]"] = name.toLowerCase();
 			});
@@ -1567,7 +1568,7 @@
 					// $1 捕获的是 attrName,
 					// $2 捕获的是 = 或 != 这样的等号方式，
 					// $3 捕获单双引号
-					// $4 提供三种匹配字符串的方式：\\.*?\3,非斜杠*?\3(因为斜杠没意义),识别符,此处相当于捕获 attrValue，只不过要兼容带引号和不带两种形式
+					// $4 提供三种匹配字符串的方式：\\.*?\3,非斜$杠*?\3(因为斜杠没意义),识别符,此处相当于捕获 attrValue，只不过要兼容带引号和不带两种形式
 					// $5 捕获识别符
 					// 看 attributes 开头和结尾匹配的是代表属性选择符的'['和']'，
 					// 所以整个正则捕获出来的结果分别代表的含义是[ attrName、等号、引号、attrValue、attrValue ]
