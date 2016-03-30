@@ -74,7 +74,7 @@
 
 			// 定义当前版本
 			// 其次，这里定义了一个字符串对象 ，如果下文行文需要调用字符串对象的 trim 方法
-			// 将会调用 core_trim ，这个变量事先存储好了 String.trim 方法的入口  
+			// 将会调用 core_trim ，这个变量事先存储好了 String.trim 方法的入口
 			// 节省查找内存地址时间，提高效率
 			core_version = "1.10.2",
 
@@ -98,7 +98,7 @@
 
 			// Define a local copy of jQuery
 			// 实例化 jQuery 对象 ,selector 是选择器，context 是上下文
-			// 用法：$('#xxx') || $('<div></div>', { class: 'css-class', data-name: 'data-val' }); 
+			// 用法：$('#xxx') || $('<div></div>', { class: 'css-class', data-name: 'data-val' });
 			jQuery = function(selector, context) {
 				// The jQuery object is actually just the init constructor 'enhanced'
 				// jQuery 没有使用 new 运算符将 jQuery 显示的实例化，而是直接调用其函数
@@ -126,7 +126,7 @@
 			core_rnotwhite = /\S+/g,
 
 			// Make sure we trim BOM and NBSP (here's looking at you, Safari 5.0 and IE)
-			// 匹配头尾空格，确保去除 BOM 和 $nbsp; 
+			// 匹配头尾空格，确保去除 BOM 和 $nbsp;
 			// | 分割的两部分是一样，分别匹配头尾的空格
 			// 最快的trim方法请看：http://www.cnblogs.com/rubylouvre/archive/2009/09/18/1568794.html
 			rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,
@@ -160,7 +160,7 @@
 
 			// Used by jQuery.camelCase as callback to replace()
 			// 在 jQuery.camelCase() 中会用到
-			// 驼峰表示法，将 font-size 形式转化为 fontSize 
+			// 驼峰表示法，将 font-size 形式转化为 fontSize
 			// function camelCase(string){
 			// 	return string.replace(/-([a-z])/g,function(all,letter){
 			// 		return letter.toUpperCase();
@@ -204,7 +204,7 @@
 
 			// 初始化方法
 			// 即 构造jQuery对象实际上最后是调用这个方法(new jQuery.fn.init( selector, context, rootjQuery ) )
-			// $('#xxx') -> new jQuery('#xxx') 
+			// $('#xxx') -> new jQuery('#xxx')
 			// 这个方法可以称作 jQuery对象构造器
 			init: function(selector, context, rootjQuery) {
 				var match, elem;
@@ -222,7 +222,7 @@
 					// 下面这个 if 条件判断是先给 match 变量赋值
 					// if 条件相当于这个正则式 /^<\.+>$/
 					// 也就是以  "<"开始，">"结尾，且长度大于等于3 ，
-					// ex. <p> <html> 
+					// ex. <p> <html>
 					if (selector.charAt(0) === "<" && selector.charAt(selector.length - 1) === ">" && selector.length >= 3) {
 						// Assume that strings that start and end with <> are HTML and skip the regex check
 						// 如果selector是html标签组成的话，match的组成直接如下
@@ -257,8 +257,8 @@
 
 							// HANDLE: $(html, props)
 							// 这个 if 语句的作用是当 传入的selector 是纯 HTML 标签，且 context 不为空，相当于
-							// var jqHTML = $('<div></div>', { class: 'css-class', data-name: 'data-val' }); 
-							// console.log(jqHTML.attr('class')); //css-class 
+							// var jqHTML = $('<div></div>', { class: 'css-class', data-name: 'data-val' });
+							// console.log(jqHTML.attr('class')); //css-class
 							// console.log(jqHTML.attr('data-name')); //data-val
 							// rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>|)$/
 							// 上面这个正则匹配的是 纯HTML标签,不带任何属性 ，如 '<html></html>' 或者 '<img/>'
@@ -357,7 +357,7 @@
 			selector: "",
 
 			// The default length of a jQuery object is 0
-			// jQuery 对象的默认长度为 0 
+			// jQuery 对象的默认长度为 0
 			// jQuery 对象里边选取的DOM节点数目，有了这个属性就已经像“半个”数组了，:)
 			length: 0,
 
@@ -587,8 +587,8 @@
 		};
 
 		// 一些工具函数，区分 jQuery.extend(object) 和 jQuery.fn.extend(object) 区别
-		// jQuery.extend(object) 为扩展 jQuery 类本身，为类添加新的方法。 
-		// jQuery.fn.extend(object) 给 jQuery 对象添加方法 
+		// jQuery.extend(object) 为扩展 jQuery 类本身，为类添加新的方法。
+		// jQuery.fn.extend(object) 给 jQuery 对象添加方法
 		jQuery.extend({
 				// Unique for each copy of jQuery on the page
 				// Non-digits removed to match rinlinejQuery
@@ -596,19 +596,19 @@
 				expando: "jQuery" + (core_version + Math.random()).replace(/\D/g, ""),
 
 				// noConflict() 方法让出变量 $ 的 jQuery 控制权，这样其他脚本就可以使用它了
-				// 通过全名替代简写的方式来使用 jQuery 
+				// 通过全名替代简写的方式来使用 jQuery
 				// deep -- 布尔值。指示是否允许彻底将 jQuery 变量还原(移交 $ 引用的同时是否移交 jQuery 对象本身)
 				// 让出 jQuery $ 的控制权不代表不能在 jQuery 使用 $ ，方法如下 （）
 				//
 				//	var query = jQuery.noConflict(true);
 				//
-				// (function($) { 
-				//  
+				// (function($) {
+				//
 				//     // 插件或其他形式的代码，也可以将参数设为 jQuery
 				//  })(query);
 				//
 				//  ... 其他用 $ 作为别名的库的代码
-				//  
+				//
 				noConflict: function(deep) {
 					// 判断全局 $ 变量是否等于 jQuery 变量
 					// 如果等于，则重新还原全局变量 $ 为 jQuery 运行之前的变量（存储在内部变量 _$ 中）
@@ -622,7 +622,7 @@
 						window.jQuery = _jQuery;
 					}
 
-					// 这里返回的是 jQuery 库内部的 jQuery 构造函数（new jQuery.fn.init()） 
+					// 这里返回的是 jQuery 库内部的 jQuery 构造函数（new jQuery.fn.init()）
 					// 像使用 $ 一样尽情使用它吧
 					return jQuery;
 				},
@@ -639,12 +639,12 @@
 				// Hold (or release) the ready event
 				// 方法允许调用者延迟 jQuery 的 ready 事件
 				// example. 延迟就绪事件，直到已加载的插件。
-				// 
+				//
 				// $.holdReady(true);
 				// $.getScript("myplugin.js", function() {
 				//   $.holdReady(false);
 				// });
-				// 
+				//
 				holdReady: function(hold) {
 					if (hold) {
 						jQuery.readyWait++;
@@ -670,7 +670,7 @@
 						// 将 jQuery.ready 放入定时器 setTimeout 中
 						// 不带时间参数的 setTimeout(a) 相当于 setTimeout(a,0)
 						// 但是这里并不是立即触发 jQuery.ready
-						// 由于 javascript 的单线程的异步模式 
+						// 由于 javascript 的单线程的异步模式
 						// setTimeout(jQuery.ready) 会等到重绘完成才执行代码，也就是 DOMContentLoaded 之后才执行 jQuery.ready
 						// 所以这里有个小技巧：在 setTimeout 中触发的函数, 一定会在 DOM 准备完毕后触发
 						return setTimeout(jQuery.ready);
@@ -816,12 +816,12 @@
 					// rsingleTag.test('<div class="foo"></div>') --> false
 					var parsed = rsingleTag.exec(data),
 						scripts = !keepScripts && [];
-					// 这里相当于 
+					// 这里相当于
 					// if(!keepScripts){
 					// 	 scripts = [];
 					// }else{
-					// 	 scripts = !keepScripts;	
-					// }		
+					// 	 scripts = !keepScripts;
+					// }
 
 					// Single tag
 					// 单个标签，如果捕获的 div 相当于
@@ -906,12 +906,12 @@
 						// We use execScript on Internet Explorer
 						// We use an anonymous function so that context is window
 						// rather than jQuery in Firefox
-						// 如果 window.execScript 存在，则直接 window.execScript(data) 
+						// 如果 window.execScript 存在，则直接 window.execScript(data)
 						// window.execScript 方法会根据提供的脚本语言执行一段脚本代码
 						// 现在是在IE跟旧版本的Chrome是支持此方法的，新版浏览器没有 window.execScript 这个API
 						(window.execScript || function(data) {
 							// 这里为何不能直接：eval.call( window, data );
-							// 在chrome一些旧版本里eval.call( window, data )无效 
+							// 在chrome一些旧版本里eval.call( window, data )无效
 							window["eval"].call(window, data);
 						})(data);
 					}
@@ -952,7 +952,7 @@
 						length = obj.length,
 						isArray = isArraylike(obj); // 判断是不是数组
 
-					// 传了第三个参数	
+					// 传了第三个参数
 					if (args) {
 						if (isArray) {
 							for (; i < length; i++) {
@@ -966,7 +966,7 @@
 									break;
 								}
 							}
-							// 非数组	
+							// 非数组
 						} else {
 							for (i in obj) {
 								value = callback.apply(obj[i], args);
@@ -991,7 +991,7 @@
 									break;
 								}
 							}
-							// 非数组	
+							// 非数组
 						} else {
 							for (i in obj) {
 								value = callback.call(obj[i], i, obj[i]);
@@ -1114,7 +1114,7 @@
 						ret = [],
 						i = 0,
 						length = elems.length;
-					// !! 强制类型转换为 boolean 值	
+					// !! 强制类型转换为 boolean 值
 					inv = !!inv;
 
 					// Go through the array, only saving the items
@@ -1611,7 +1611,7 @@
 					rsibling = new RegExp(whitespace + "*[+~]"),
 
 					// rattributeQuotes = new RegExp("=[\\x20\\t\\r\\n\\f]*([^\\]'\"]*)[\\x20\\t\\r\\n\\f]*\\]","g")
-					// 匹配属性等号 [type = xxx] =之后的 = xxx] 
+					// 匹配属性等号 [type = xxx] =之后的 = xxx]
 					rattributeQuotes = new RegExp("=" + whitespace + "*([^\\]'\"]*)" + whitespace + "*\\]", "g"),
 
 					// 构造匹配伪类的正则表达式
@@ -1653,7 +1653,7 @@
 					// 匹配 h1 ~ h6 标签
 					rheader = /^h\d$/i,
 
-					// 匹配 ' 和 \ 
+					// 匹配 ' 和 \
 					rescape = /'|\\/g,
 
 					// CSS escapes http://www.w3.org/TR/CSS21/syndata.html#escaped-characters
@@ -1713,10 +1713,10 @@
 				// Sizzle 引擎的入口函数
 				// 选择器入口，jQuery 的构造函数要处理 6 大类情况
 				// 但是只有在处理选择器表达式(selector expression)时才会调用 Sizzle 选择器引擎。
-				// @param selector 已去掉头尾空白的选择器字符串 
-				// @param context 执行匹配的最初的上下文（即DOM元素集合）。若context没有赋值，则取document。 
-				// @param results 已匹配出的部分最终结果。若results没有赋值，则赋予空数组。 
-				// @param seed 初始集合 
+				// @param selector 已去掉头尾空白的选择器字符串
+				// @param context 执行匹配的最初的上下文（即DOM元素集合）。若context没有赋值，则取document。
+				// @param results 已匹配出的部分最终结果。若results没有赋值，则赋予空数组。
+				// @param seed 初始集合
 				function Sizzle(selector, context, results, seed) {
 					var match, elem, m, nodeType,
 						// QSA vars
@@ -1733,7 +1733,7 @@
 					context = context || document;
 					results = results || [];
 
-					// 如果选择器字符串为空，返回 results 
+					// 如果选择器字符串为空，返回 results
 					// results 可能是已匹配出的部分最终结果，也可能是空数组
 					if (!selector || typeof selector !== "string") {
 						return results;
@@ -1760,7 +1760,7 @@
 							// selector会匹配 #[id] | [tag] | .[class] 其中之一
 							// match[1] 的值是元素是与 rquickExpr 的第 1 个子表达式相匹配的文本，
 							// 在这里 match[1] 就是匹配到的 id 选择器的名字（如果有）
-							// 如果匹配到 id 选择器 #xx 
+							// 如果匹配到 id 选择器 #xx
 							if ((m = match[1])) {
 								// 9 -- Document
 								// 如果上下文是 document
@@ -1792,7 +1792,7 @@
 
 								// Speed-up: Sizzle("TAG")
 								// 在这里 match[2] 就是匹配到的 tag 选择器的名字（如果有）
-								// 如果匹配到 tag 选择器 诸如div p 等 
+								// 如果匹配到 tag 选择器 诸如div p 等
 							} else if (match[2]) {
 								// 利用原生方法 getElementsByTagName 找到元素
 								push.apply(results, context.getElementsByTagName(selector));
@@ -1801,7 +1801,7 @@
 								// Speed-up: Sizzle(".CLASS")
 								// 在这里 match[3] 就是匹配到的 class 选择器的名字（如果有）
 								// 如果匹配到 class 选择器 .xxx
-								// 并且 
+								// 并且
 								// support.getElementsByClassName 为 true 表示浏览器支持 getElementsByClassName 这个方法
 							} else if ((m = match[3]) && support.getElementsByClassName && context.getElementsByClassName) {
 								push.apply(results, context.getElementsByClassName(m));
@@ -1945,7 +1945,7 @@
 				 * @param {String} attrs Pipe-separated list of attributes
 				 * @param {Function} handler The method that will be applied
 				 */
-				// 
+				//
 				function addHandle(attrs, handler) {
 					var arr = attrs.split("|"),
 						i = attrs.length;
@@ -2112,7 +2112,7 @@
 					// The broken getElementById methods don't pick up programatically-set names,
 					// so use a roundabout getElementsByName test
 					// 兼容 IE10 以下
-					// 检查是否 getElementById 
+					// 检查是否 getElementById
 					// getElemenById 方法不收集程序设置的 name 属性，所以迂回的使用 getElementsByName 测试
 					support.getById = assert(function(div) {
 						docElem.appendChild(div).id = expando;
@@ -2235,7 +2235,7 @@
 							}
 						});
 
-						// 
+						//
 						assert(function(div) {
 
 							// Support: Opera 10-12/IE8
@@ -2554,7 +2554,7 @@
 
 					// relative 用来表示节点间的关系，一个节点跟另一个节点有以下几种关系
 					// 父亲和儿子，用 > 表达
-					// 祖宗和后代 ，用 （空格） 表达 
+					// 祖宗和后代 ，用 （空格） 表达
 					// 临近兄弟，用 + 表达
 					// 普通兄弟，用 ~ 表达
 					// first属性，用来标识两个节点的“紧密”程度,例如父子关系和临近兄弟关系就是紧密的
@@ -2701,7 +2701,7 @@
 							};
 						},
 
-						// 
+						//
 						"CHILD": function(type, what, argument, first, last) {
 							var simple = type.slice(0, 3) !== "nth",
 								forward = type.slice(-4) !== "last",
@@ -3064,7 +3064,7 @@
 						soFar, groups, preFilters,
 						cached = tokenCache[selector + " "];
 
-					// 如果cache里边有，直接拿出来即可	
+					// 如果cache里边有，直接拿出来即可
 					if (cached) {
 						return parseOnly ? 0 : cached.slice(0);
 					}
@@ -3073,7 +3073,7 @@
 					soFar = selector;
 					groups = [];
 					// 这里的预处理器为了对匹配到的 Token 适当做一些调整
-					// 其实就是正则匹配到的内容的一个预处理 
+					// 其实就是正则匹配到的内容的一个预处理
 					preFilters = Expr.preFilter;
 
 					// 当字符串还没解析完毕，循环开始
@@ -3119,7 +3119,7 @@
 						for (type in Expr.filter) {
 							// 如果通过正则匹配到了 Token 格式：match = matchExpr[ type ].exec( soFar )
 							// 然后看看需不需要预处理：!preFilters[ type ]
-							// 如果需要 ，那么通过预处理器将匹配到的处理一下 ： match = preFilters[ type ]( match )			
+							// 如果需要 ，那么通过预处理器将匹配到的处理一下 ： match = preFilters[ type ]( match )
 							if ((match = matchExpr[type].exec(soFar)) && (!preFilters[type] ||
 									(match = preFilters[type](match)))) {
 								matched = match.shift();
@@ -3165,7 +3165,7 @@
 					return selector;
 				}
 
-				// 
+				//
 				function addCombinator(matcher, combinator, base) {
 					var dir = combinator.dir,
 						checkNonElements = base && dir === "parentNode",
@@ -3367,7 +3367,7 @@
 							return indexOf.call(checkContext, elem) > -1;
 						}, implicitRelative, true),
 
-						// 这里用来确定元素在哪个 context	
+						// 这里用来确定元素在哪个 context
 						matchers = [function(elem, context, xml) {
 							return (!leadingRelative && (xml || context !== outermostContext)) || (
 								(checkContext = context).nodeType ?
@@ -3418,7 +3418,7 @@
 						bySet = setMatchers.length > 0,
 						byElement = elementMatchers.length > 0,
 						// 内嵌 superMatcher
-						// 
+						//
 						superMatcher = function(seed, context, xml, results, expandContext) {
 							var elem, j, matcher,
 								setMatched = [],
@@ -3435,7 +3435,7 @@
 								// Use integer dirruns if this is the outermost matcher
 								dirrunsUnique = (dirruns += contextBackup == null ? 1 : Math.random() || 0.1);
 
-							// 搜索范围作用域	
+							// 搜索范围作用域
 							// 可以看出对于优化选择器，最右边应该写一个作用域的搜索范围context比较好
 							if (outermost) {
 								outermostContext = context !== document && context;
@@ -3579,7 +3579,7 @@
 						// tokenize 返回的是一个 Token 序列
 						match = tokenize(selector);
 
-					// 如果外界没有指定初始集合 seed 	
+					// 如果外界没有指定初始集合 seed
 					if (!seed) {
 						// Try to minimize operations if there is only one group
 						// 如果只有一组，就是在单个选择器的情况（即是没有逗号的选择器，并非单条规则）
@@ -3590,7 +3590,7 @@
 							// 取出选择器 Token 序列
 							tokens = match[0] = match[0].slice(0);
 
-							// 这么一大串其实简单来说是 
+							// 这么一大串其实简单来说是
 							// 其实 Sizzle 不完全是采用从右到左，如果选择器表达式的最左边存在 #id 选择器
 							// 就会首先对最左边进行查询，并将其作为下一步的执行上下文，
 							// 最终达到缩小上下文的目的，考虑的相当全面
@@ -3668,9 +3668,9 @@
 					// tokenize(selector) 的结果不止一组，无法使用上述简便的方法
 					// 交由 compile 来生成一个称为终极匹配器
 					// 通过这个匹配器过滤 seed ，把符合条件的结果放到 results 里边
-					// 生成编译函数 
+					// 生成编译函数
 					// var superMatcher = compile( selector, match )
-					// 执行 
+					// 执行
 					// superMatcher(seed,context,!documentIsHTML,results,rsibling.test( selector ))
 					compile(selector, match)(
 						seed,
@@ -3756,7 +3756,7 @@
 
 			})(window);
 			// String to Object options format cache
-			// 创建一个 options 缓存，用于 Callbacks 
+			// 创建一个 options 缓存，用于 Callbacks
 			var optionsCache = {};
 
 			// Convert String-formatted options into Object-formatted ones and store in cache
@@ -3844,7 +3844,7 @@
 					// Fire callbacks
 					// 触发回调函数列表
 					// 这个函数是内部使用的辅助函数，私有方法
-					// 它被 self.fire 以及 self.fireWith 调用 
+					// 它被 self.fire 以及 self.fireWith 调用
 					fire = function(data) {
 						// 如果参数 memory 为true，则记录 data
 						// 如果是 memory 类型管理器
@@ -3861,7 +3861,7 @@
 						// 遍历回调队列 list
 						for (; list && firingIndex < firingLength; firingIndex++) {
 							// data[ 0 ]是函数执行的上下文，也就是平时的this
-							// 这里看再看下 self.fireWith 传过来的参数 args 的格式 
+							// 这里看再看下 self.fireWith 传过来的参数 args 的格式
 							// 如果是stopOnFalse管理器，并且回调返回值是false，中断！
 							// list[ firingIndex ].apply( data[ 0 ], data[ 1 ] ) 是最终的执行回调的方法
 							if (list[firingIndex].apply(data[0], data[1]) === false && options.stopOnFalse) {
@@ -3881,7 +3881,7 @@
 									fire(stack.shift());
 									// 这里是深度遍历，直到事件队列为空
 								}
-								// 深度遍历结束	
+								// 深度遍历结束
 								// 等到fire完所有的事件后
 								// 如果是memory类型管理器，下次还能继续
 							} else if (memory) {
@@ -3963,7 +3963,7 @@
 									var index;
 									// inArray(elem,arr,i) -- 在数组中查找指定值并返回它的索引（如果没有找到，则返回-1）
 									// elem 规定需检索的值, arr 数组, i 可选的整数参数
-									// 
+									//
 									while ((index = jQuery.inArray(arg, list, index)) > -1) {
 										// splice(index,howmany) 方法向/从数组中添加/删除项目，然后返回被删除的项目
 										// index -- 必需。整数，规定添加/删除项目的位置
@@ -4012,7 +4012,7 @@
 							return !list;
 						},
 						// Lock the list in its current state
-						// 
+						//
 						lock: function() {
 							stack = undefined;
 							if (!memory) {
@@ -4084,7 +4084,7 @@
 				Deferred: function(func) {
 					// tuples 创建三个 $.Callbacks 对象，分别表示成功，失败，处理中三种状态
 					// 为什么要写成 tuples 这种格式呢，其实是把相同有共同特性的代码的给合并成一种结构，
-					// 然后下面通过 jQuery.each(tuples, function(i, tuple) {} 一次处理 
+					// 然后下面通过 jQuery.each(tuples, function(i, tuple) {} 一次处理
 					var tuples = [
 							// action, add listener, listener list, final state
 							// 三个队列，done|fail|progress 成功|失败|处理中
@@ -4127,7 +4127,7 @@
 								// 这里可以看到，又使用了 jQuery.Deferred() 对 then 方法里面的参数又封装了一次
 								return jQuery.Deferred(function(newDefer) {
 
-									// 遍历 tuples 
+									// 遍历 tuples
 									jQuery.each(tuples, function(i, tuple) {
 										// action 表示三种状态 resolve 、reject 、notify 其中之一
 										// 分别对应 fnDone, fnFail, fnProgress（首先用 isFunction 判断传入的参数是否是方法，注意 && 在这里的用法）
@@ -4148,7 +4148,7 @@
 													.done(newDefer.resolve)
 													.fail(newDefer.reject)
 													.progress(newDefer.notify);
-												// 如果回调返回的是不是一个 Deferred 实例，则被当做 args 由 XXXWith 派发出去		
+												// 如果回调返回的是不是一个 Deferred 实例，则被当做 args 由 XXXWith 派发出去
 											} else {
 												newDefer[action + "With"](this === promise ? newDefer.promise() : this, fn ? [returned] : arguments);
 											}
@@ -4215,7 +4215,7 @@
 						}
 
 						// deferred[ resolve | reject | notify ]
-						// tuple[0] == resolve | reject | notify 
+						// tuple[0] == resolve | reject | notify
 						// 可以看到 resolve | reject | notify 其实就是 Callbacks 里边的 fire 方法
 						// 这里还有一点，deferred 对象是暴露了 resolve | reject | notify 三个方法的，而 deferred.promise() 只暴露 done, fail, always 这些个回调函数接口
 						// 之所以通常使用 deferred 是要返回 deferred.promise() ，一是因为 CommonJS promise/A 本来就应当是这样子的；二也是用来避免返回的对象能够主动地调用到 resolve 与 reject 这些关键性的方法
@@ -4224,7 +4224,7 @@
 							return this;
 						};
 						// deferred[resolveWith | rejectWith | notifyWith] 调用的是 Callbacks 里的 fireWith 方法
-						// 
+						//
 						deferred[tuple[0] + "With"] = list.fireWith;
 					});
 					// Make the deferred a promise
@@ -4241,7 +4241,7 @@
 					// Call given func if any
 					// $.Deferred(func)格式
 					// $.Deferred() 可以接受一个函数名（注意，是函数名）作为参数，$.Deferred() 所生成的 deferred 对象将作为这个函数的默认参数
-					// 例子: 
+					// 例子:
 					// http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html
 					// 并且把当前任务的上下文跟参数设置成当前生成的deferred实例
 					if (func) {
@@ -4288,7 +4288,7 @@
 								// 处理中，派发正在处理事件
 								if (values === progressValues) {
 									deferred.notifyWith(contexts, values);
-									// 成功，并且最后剩余的异步任务为0了	
+									// 成功，并且最后剩余的异步任务为0了
 								} else if (!(--remaining)) {
 									// 说明所有任务都成功了，派发成功事件出去
 									// 事件包含的上下文是当前任务前边的所有任务的一个集合
@@ -4504,7 +4504,7 @@
 				// Beware of CSP restrictions (https://developer.mozilla.org/en/Security/CSP)
 				// submitBubbles, changeBubbles, focusinBubbles
 				// 检查 submit、change、focus 事件是否在“冒泡阶段”触发
-				// 实际上只针对 IE 进行检查。因为大多数浏览器（及IE9）使用 addEventListener 附加事件，函数的第三个参数 useCapture （是否在“捕捉阶段”触发事件）既可以为 false ，也可以为 true 
+				// 实际上只针对 IE 进行检查。因为大多数浏览器（及IE9）使用 addEventListener 附加事件，函数的第三个参数 useCapture （是否在“捕捉阶段”触发事件）既可以为 false ，也可以为 true
 				//  而 IE （IE9之前）使用 attachEvent 函数附加事件，该函数无法指定在哪个阶段触发事件，一律都为“冒泡阶段”触发
 				for (i in {
 						submit: true,
@@ -4540,7 +4540,7 @@
 						divReset = "padding:0;margin:0;border:0;display:block;box-sizing:content-box;-moz-box-sizing:content-box;-webkit-box-sizing:content-box;",
 						body = document.getElementsByTagName("body")[0];
 
-					// 不存在 body 标签直接返回	
+					// 不存在 body 标签直接返回
 					if (!body) {
 						// Return for frameset docs that don't have a body
 						return;
@@ -4684,7 +4684,7 @@
 				var ret, thisCache,
 					// 产生jQuery键值随机数 类似于： "11020056177454302087426"
 					// expando.jQuery = (core_version + Math.random()).replace(/\D/g, "");
-					// (core_version + Math.random()) 产生一串随机字符串 "1.10.20.6013481540139765" 
+					// (core_version + Math.random()) 产生一串随机字符串 "1.10.20.6013481540139765"
 					// replace(/\D/g, "") 去掉非数字
 					internalKey = jQuery.expando,
 
@@ -4696,7 +4696,7 @@
 					// Only DOM nodes need the global jQuery cache; JS object data is
 					// attached directly to the object so GC can occur automatically
 					// 只有 DOM 元素需要全局的 jQuery 缓存 cache，
-					// 而如果是 JS 对象，则直接将数据保存在这个对象上 
+					// 而如果是 JS 对象，则直接将数据保存在这个对象上
 					cache = isNode ? jQuery.cache : elem,
 
 					// Only defining an ID for JS objects if its cache already exists allows
@@ -4822,7 +4822,7 @@
 
 					// See jQuery.data for more information
 					// 只有 DOM 元素需要全局的 jQuery 缓存 cache，
-					// 而如果是 JS 对象，则直接将数据保存在这个对象上 
+					// 而如果是 JS 对象，则直接将数据保存在这个对象上
 					cache = isNode ? jQuery.cache : elem,
 
 					// 添加的对象的 key 值，根据元素 elem 的 nodeType 判断
@@ -4837,7 +4837,7 @@
 					return;
 				}
 
-				// cache[id] != false 
+				// cache[id] != false
 				// 有数据存在
 				if (name) {
 
@@ -4870,7 +4870,7 @@
 									name = name.split(" ");
 								}
 							}
-							// 如果是数组	
+							// 如果是数组
 						} else {
 							// If "name" is an array of keys...
 							// When data is initially created, via ("key", "val") signature,
@@ -4919,7 +4919,7 @@
 				}
 
 				// 代码执行到这里时：
-				// 1.删除的是系统级别数据, 
+				// 1.删除的是系统级别数据,
 				// 2.已经清空完了用户的缓存数据,而且数据缓存对象还不是空的时候
 
 				// Destroy the cache
@@ -4991,7 +4991,7 @@
 				// nodeType = 9 -- Document
 				acceptData: function(elem) {
 					// Do not set data on non-element because it will not be cleared (#8335).
-					// 
+					//
 					if (elem.nodeType && elem.nodeType !== 1 && elem.nodeType !== 9) {
 						return false;
 					}
@@ -5025,7 +5025,7 @@
 					// Gets all values
 					// 未传入参数的情况
 					if (key === undefined) {
-						// 如果参数 key 是 undefined , 即参数格式是.data(), 
+						// 如果参数 key 是 undefined , 即参数格式是.data(),
 						// 则调用方法 jQuery.data(elem, name, data) 获取第一个匹配元素关联的自定义数据缓存对象，并返回
 						// 这里的 this 指代的是调用 .data() 的对象
 						if (this.length) {
@@ -5040,7 +5040,7 @@
 									// name为属性名
 									name = attrs[i].name;
 
-									// 先尝试是否有命名为 data-xxxx 的数据  
+									// 先尝试是否有命名为 data-xxxx 的数据
 									if (name.indexOf("data-") === 0) {
 										// 取 data-xxxx 后面的 xxxx，即是
 										// <div data-idName="123"></div> 取其属性 "data-idName" 其中的 idName
@@ -5061,13 +5061,13 @@
 					// 下面分情况处理
 
 					// Sets multiple values
-					// 如果参数 key 是对象，批量设置 key-value 
-					// 
+					// 如果参数 key 是对象，批量设置 key-value
+					//
 					// $.data(divElement,{
 					//     'name': 'div',
 					//     'age': 19
 					// });
-					// 
+					//
 					if (typeof key === "object") {
 						return this.each(function() {
 							jQuery.data(this, key);
@@ -5117,7 +5117,7 @@
 					// 查找是否有该属性
 					data = elem.getAttribute(name);
 
-					// 找到了，且类型是 String 
+					// 找到了，且类型是 String
 					if (typeof data === "string") {
 						try {
 							data = data === "true" ? true :
@@ -5132,7 +5132,7 @@
 						// Make sure we set the data so it isn't changed later
 						jQuery.data(elem, key, data);
 
-						// 木有找到，赋值 undefined	
+						// 木有找到，赋值 undefined
 					} else {
 						data = undefined;
 					}
@@ -5168,7 +5168,7 @@
 			jQuery.extend({
 				// 静态的底层方法实现入列
 				// 方法重载，当只传入 queue(elem, type) 表示返回挂载在 elem 上名字为 type 的队列信息
-				// 传入 queue(elem, type, data) 表示 data 入列 
+				// 传入 queue(elem, type, data) 表示 data 入列
 				queue: function(elem, type, data) {
 					// 最后返回的队列信息
 					var queue;
@@ -5189,7 +5189,7 @@
 						if (data) {
 							// 查看 queue 是否已经存在，
 							if (!queue || jQuery.isArray(data)) {
-								// 不存在，新建一个队列，并将数据以数组形式 jQuery.makeArray(data) 
+								// 不存在，新建一个队列，并将数据以数组形式 jQuery.makeArray(data)
 								// 使用 jQuery._data 存储起来
 								// jQuery.makeArray() -- 将类似数组或者不是数组的东西强制转换成一个数组然后返回
 								queue = jQuery._data(elem, type, jQuery.makeArray(data));
@@ -5282,7 +5282,7 @@
 					});
 				}
 			});
-			
+
 			// jQuery原型方法，供 jQuery 对象使用
 			// $().queue()
 			jQuery.fn.extend({
@@ -5350,7 +5350,7 @@
 				// 这个代码的意思是：第一个定时器函数执行结束后，会延迟两秒钟，才会执行第二个定时器函数
 				delay: function(time, type) {
 					// jQuery.fx.speeds = {slow: 600,fast: 200,_default: 400}
-					// 意思就是说，你 delay 里面是否写了 slow ， fast ，或 _default 
+					// 意思就是说，你 delay 里面是否写了 slow ， fast ，或 _default
 					// 如果是，就直接调用默认的值，如果传入的是数字，那么就只用数字
 					time =  ? jQuery.fx.speeds[time] || time : time;
 
@@ -5403,7 +5403,7 @@
 						type = undefined;
 					}
 
-					// 如果没传入队列名，就用 fx 默认队列 
+					// 如果没传入队列名，就用 fx 默认队列
 					type = type || "fx";
 
 					// 执行一次
@@ -5428,13 +5428,13 @@
 				}
 			});
 
-			
+
 			// 下面一块是关于 DOM元素 属性的操作 -- attr() 、prop() 、 val() 等
 			var nodeHook, boolHook,
 				// \t -- 制表符，Tab
 				// \r -- 回车符
 				// \n -- 换行符
-				// \f -- 换页符 
+				// \f -- 换页符
 				rclass = /[\t\r\n\f]/g,
 
 				// \r -- 回车符
@@ -5451,13 +5451,13 @@
 				ruseDefault = /^(?:checked|selected)$/i,
 
 				// jQuery.support.getSetAttribute 测试是否支持 setAttribute 方法
-				// setAttribute 用于在 IE6\7 下获取元素的单个 CSS 属性值  
+				// setAttribute 用于在 IE6\7 下获取元素的单个 CSS 属性值
 				getSetAttribute = jQuery.support.getSetAttribute,
 
 				// 是否支持 input 的 getAttribute("value")
 				getSetInput = jQuery.support.input;
 
-			// jQuery 对象方法拓展	
+			// jQuery 对象方法拓展
 			jQuery.fn.extend({
 				// 获取匹配的元素集合中的第一个元素的属性的值，或设置每一个匹配元素的一个或多个属性
 				// 调用了 jQuery.access 方法实现
@@ -5473,7 +5473,7 @@
 					});
 				},
 
-				// .prop() 方法只获得第一个匹配元素的属性值 
+				// .prop() 方法只获得第一个匹配元素的属性值
 				// 如果元素上没有该属性，或者如果没有匹配的元素。那么该方法会返回 undefined 值
 				// 与 $.attr() 的区别
 				// 具有 true 和 false 两个属性的属性，如 checked, selected 或者 disabled 使用 prop()，其他的使用 attr()
@@ -5510,7 +5510,7 @@
 						// 检测value是否为字符串
 						proceed = typeof value === "string" && value;
 
-					// 如果 value 是函数	
+					// 如果 value 是函数
 					if (jQuery.isFunction(value)) {
 						// 那么逐个遍历现有元素，递归addClass方法
 						return this.each(function(j) {
@@ -5566,7 +5566,7 @@
 						len = this.length,
 						proceed = arguments.length === 0 || typeof value === "string" && value;
 
-					// 传入的如果是方法，遍历移除	
+					// 传入的如果是方法，遍历移除
 					if (jQuery.isFunction(value)) {
 						return this.each(function(j) {
 							jQuery(this).removeClass(value.call(this, j, this.className));
@@ -5643,13 +5643,13 @@
 								// 将 value 用空格分开成一个数组，相当于 classes = (value || "").split("/\s+/")
 								classNames = value.match(core_rnotwhite) || [];
 
-							// 如果传入了多个 Class ，遍历class	
+							// 如果传入了多个 Class ，遍历class
 							while ((className = classNames[i++])) {
 								// check each className given, space separated list
 								// 查询是否已经有当前遍历到的这个 Class，有则删除，
 								if (self.hasClass(className)) {
 									self.removeClass(className);
-								// 反之添加		
+								// 反之添加
 								} else {
 									self.addClass(className);
 								}
@@ -5673,7 +5673,7 @@
 					});
 				},
 
-				// 在元素的 class 属性上是否存在指定的 selector 
+				// 在元素的 class 属性上是否存在指定的 selector
 				// 由于可能是在元素的集合上查找，有一项存在就返回 true,否则就返回 false
 				hasClass: function(selector) {
 					// 传入的 selector 首尾添加空格
@@ -5681,7 +5681,7 @@
 						i = 0,
 						l = this.length;
 
-					// 遍历元素的合集	
+					// 遍历元素的合集
 					for (; i < l; i++) {
 						// 首先确保 this 是 Element 元素
 						// 并且 selector 存在于 this 的 ClassName 中
@@ -5702,11 +5702,11 @@
 					var ret, hooks, isFunction,
 						elem = this[0];
 
-					// 如果没有传入参数	
+					// 如果没有传入参数
 					if (!arguments.length) {
 						// elem = this[0]
 						if (elem) {
-							// 
+							//
 							hooks = jQuery.valHooks[elem.type] || jQuery.valHooks[elem.nodeName.toLowerCase()];
 
 							if (hooks && "get" in hooks && (ret = hooks.get(elem, "value")) !== undefined) {
@@ -5774,7 +5774,7 @@
 							// Use proper attribute retrieval(#6932, #12072)
 							// 在 IE6-7 下，val 是一个 object
 							var val = jQuery.find.attr(elem, "value");
-							
+
 							// 兼容 IE 的处理
 							return val != null ?
 								val :
@@ -5810,7 +5810,7 @@
 								// 其他浏览器会恢复所有 option 的 selected 的默认值
 								if ((option.selected || i === index) &&
 									// Don't return options that are disabled or in a disabled optgroup
-									// jQuery.support.optDisabled -- 
+									// jQuery.support.optDisabled --
 									// 如果 option 被设置了 disabled，那么获取 option 的值时，是获取不到的
 									(jQuery.support.optDisabled ? !option.disabled : option.getAttribute("disabled") === null) &&
 									// 如果 option 的父元素被设置了 disabled，并且父元素是 optgroup，那么也获取不到
@@ -5891,22 +5891,22 @@
 							jQuery.removeAttr(elem, name);
 
 						// 如果hooks存在, 且 hooks 中有 set 属性，且不为 xml，则执行该 set 方法
-            // 如果有返回值，则返回该返回值	
+            // 如果有返回值，则返回该返回值
 						} else if (hooks && "set" in hooks && (ret = hooks.set(elem, value, name)) !== undefined) {
 							return ret;
 
-						// 处理普通情况的属性赋值	
+						// 处理普通情况的属性赋值
 						} else {
 							elem.setAttribute(name, value + "");
 							return value;
 						}
 
-					// 如果 value 存在，则取出该属性对应的值 
-        	// 与上述钩子一样，处理特殊情况	
+					// 如果 value 存在，则取出该属性对应的值
+        	// 与上述钩子一样，处理特殊情况
 					} else if (hooks && "get" in hooks && (ret = hooks.get(elem, name)) !== null) {
 						return ret;
 
-					// 处理普通情况	
+					// 处理普通情况
 					} else {
 						ret = jQuery.find.attr(elem, name);
 
@@ -6007,7 +6007,7 @@
 
 				// $().prop() 方法的钩子
 				propHooks: {
-					// 
+					//
 					tabIndex: {
 						get: function(elem) {
 							// elem.tabIndex doesn't always return the correct value when it hasn't been explicitly set
@@ -6026,7 +6026,7 @@
 			});
 
 			// Hooks for boolean attributes
-			// 
+			//
 			boolHook = {
 				set: function(elem, value, name) {
 					if (value === false) {
@@ -6043,7 +6043,7 @@
 
 					return name;
 				}
-			}; 
+			};
 
 			jQuery.each(jQuery.expr.match.bool.source.match(/\w+/g), function(i, name) {
 				var getter = jQuery.expr.attrHandle[name] || jQuery.find.attr;
@@ -6263,22 +6263,29 @@
 			// 事件操作相关处理模块
 			jQuery.event = {
 
-				// 
+				//
 				global: {},
 
 				// 事件的 add 方法
+				// jQuery 从 1.2.3 版本引入数据缓存系统，贯穿内部，为整个体系服务，事件体系也引入了这个缓存机制
+				// 遇到难懂的代码可以暂且跳过
 				add: function(elem, types, handler, data, selector) {
 					var tmp, events, t, handleObjIn,
 						special, eventHandle, handleObj,
 						handlers, type, namespaces, origType,
+						// 添加或读取一个仅供内部使用的数据缓存
+						// 第一步：获取数据缓存
 						elemData = jQuery._data(elem);
 
 					// Don't attach events to noData or text/comment nodes (but allow plain objects)
+					// 为空返回
 					if (!elemData) {
 						return;
 					}
 
 					// Caller can pass in an object of custom data in lieu of the handler
+        	// 这里在之前一直不明白为什么要这么做，原因就是这里的 handler 可以是一个function,即我们平时所说的绑定的事件方法
+        	// 同时也可以是一个事件对象，也就是下面所说的 handleObj ,那么如果是在 jQuery 的内部是可以传递一个事件对象过来的
 					if (handler.handler) {
 						handleObjIn = handler;
 						handler = handleObjIn.handler;
@@ -6286,32 +6293,65 @@
 					}
 
 					// Make sure that the handler has a unique ID, used to find/remove it later
+					// 生成唯一的 guid
+					// 第二步：创建编号
 					if (!handler.guid) {
 						handler.guid = jQuery.guid++;
 					}
 
 					// Init the element's event structure and main handler, if this is the first
+					// 如果缓存数据中没有 events 数据，第一次调用的时候
+					// 第三步：分解事件名与句柄
 					if (!(events = elemData.events)) {
+						// 则初始化events
 						events = elemData.events = {};
 					}
+
+					// 如果缓存数据中没有 handle 数据
 					if (!(eventHandle = elemData.handle)) {
+						// 定义事件处理函数
 						eventHandle = elemData.handle = function(e) {
 							// Discard the second event of a jQuery.event.trigger() and
 							// when an event is called after a page has unloaded
+							// 取消jQuery.event.trigger第二次触发事件
+            	// 以及装卸后的事件
 							return typeof jQuery !== core_strundefined && (!e || jQuery.event.triggered !== e.type) ?
+								// jQuery.event.dispatch -- 分派（执行）事件处理函数
 								jQuery.event.dispatch.apply(eventHandle.elem, arguments) :
 								undefined;
 						};
 						// Add elem as a property of the handle fn to prevent a memory leak with IE non-native events
+						// 定义事件处理器对应的元素，用于防止 IE 非原生事件中的内存泄露
 						eventHandle.elem = elem;
 					}
+					// events，eventHandle 都是 elemData 缓存对象内部的，可见
+					// 在 elemData 中有两个重要的属性
+					// 一个是 events，是 jQuery 内部维护的事件列队
+					// 一个是 handle，是实际绑定到 elem 中的事件处理函数
+					// 之后的代码无非就是对这 2 个对象的筛选，分组，填充
 
 					// Handle multiple events separated by a space
+					// 事件可能是通过空格键分隔的字符串，所以将其变成字符串数组
+					// core_rnotwhite = /\S+/g;  -- 匹配任意不是空白符的字符
+					// 第四步: 填充事件名与相应事件句柄
 					types = (types || "").match(core_rnotwhite) || [""];
 					t = types.length;
+
+					// 遍历所有事件
+					// 多事件处理
+					// 如果是多事件分组的情况 jQuery(...).bind("mouseover mouseout", fn);
+					// 事件可能是通过空格键分隔的字符串，所以将其变成字符串数组
 					while (t--) {
+						// 尝试取出事件的 namespace，如aaa.bbb.ccc
 						tmp = rtypenamespace.exec(types[t]) || [];
+						// 取出事件，如aaa
 						type = origType = tmp[1];
+						// 取出事件命名空间，如bbb.ccc，并根据"."分隔成数组
+						// 增加命名空间处理
+						// 事件名称可以添加指定的 event namespaces（命名空间） 来简化删除或触发事件。例如，
+						// "click.myPlugin.simple" 为 click 事件同时定义了两个命名空间 myPlugin 和 simple。通过上述方法绑定的 click 事件处理，可以用
+						// .off("click.myPlugin") 或 .off("click.simple") 删除绑定到相应元素的 Click 事件处理程序，而不会干扰其他绑定在该元素上的“click（点击）” 事件。命名空间类似CSS类，因为它们是不分层次的;只需要有一个名字相匹配即可。
+						// 以下划线开头的名字空间是供 jQuery 使用的。
 						namespaces = (tmp[2] || "").split(".").sort();
 
 						// There *must* be a type, no attaching namespace-only handlers
@@ -6320,15 +6360,19 @@
 						}
 
 						// If event changes its type, use the special event handlers for the changed type
+						// 事件是否会改变当前状态，如果会则使用特殊事件
 						special = jQuery.event.special[type] || {};
 
 						// If selector defined, determine special event api type, otherwise given type
+						// 根据是否已定义 selector ，决定使用哪个特殊事件 api ，如果没有非特殊事件，则用 type
 						type = (selector ? special.delegateType : special.bindType) || type;
 
 						// Update special based on newly reset type
+						// 根据状态改变后的特殊事件
 						special = jQuery.event.special[type] || {};
 
 						// handleObj is passed to all event handlers
+						// 组装用于特殊事件处理的对象
 						handleObj = jQuery.extend({
 							type: type,
 							origType: origType,
@@ -6341,6 +6385,7 @@
 						}, handleObjIn);
 
 						// Init the event handler queue if we're the first
+						// 初始化事件处理列队，如果是第一次使用
 						if (!(handlers = events[type])) {
 							handlers = events[type] = [];
 							handlers.delegateCount = 0;
@@ -6348,24 +6393,31 @@
 							// Only use addEventListener/attachEvent if the special events handler returns false
 							if (!special.setup || special.setup.call(elem, data, namespaces, eventHandle) === false) {
 								// Bind the global event handler to the element
+								// 关键在这里：底层的绑定接口
 								if (elem.addEventListener) {
+									// false 是在冒泡阶段触发
 									elem.addEventListener(type, eventHandle, false);
-
+								// 兼容IE8-
 								} else if (elem.attachEvent) {
 									elem.attachEvent("on" + type, eventHandle);
 								}
 							}
 						}
 
+						// 通过特殊事件 add 处理事件
+						// 什么时候要用到自定义函数？
+						// 有些浏览器并不兼容某类型的事件，如IE6～8不支持hashchange事件，你无法通过jQuery(window).bind('hashchange', callback)来绑定这个事件，这个时候你就可以通过jQuery自定义事件接口来模拟这个事件，做到跨浏览器兼容。
 						if (special.add) {
+							// 添加事件
 							special.add.call(elem, handleObj);
-
+							// 设置处理函数的 id
 							if (!handleObj.handler.guid) {
 								handleObj.handler.guid = handler.guid;
 							}
 						}
 
 						// Add to the element's handler list, delegates in front
+						// 将事件处理函数推入处理列表
 						if (selector) {
 							handlers.splice(handlers.delegateCount++, 0, handleObj);
 						} else {
@@ -6373,10 +6425,12 @@
 						}
 
 						// Keep track of which events have ever been used, for event optimization
+						// 表示事件曾经使用过，用于事件优化
 						jQuery.event.global[type] = true;
 					}
 
 					// Nullify elem to prevent memory leaks in IE
+					// 设置为null避免IE中循环引用导致的内存泄露
 					elem = null;
 				},
 
@@ -7139,8 +7193,12 @@
 				});
 			}
 
+			// jQuery 对象方法
 			jQuery.fn.extend({
-
+				// events：事件名
+				// selector: 一个选择器字符串，用于过滤出被选中的元素中能触发事件的后代元素
+				// data: 当一个事件被触发时，要传递给事件处理函数的
+				// handler: 事件被触发时，执行的函数
 				on: function(types, selector, data, fn, /*INTERNAL*/ one) {
 					var type, origFn;
 
