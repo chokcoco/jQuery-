@@ -241,7 +241,7 @@
 					if (match && (match[1] || !context)) {
 
 						// HANDLE: $(html) -> $(array)
-						// match[1] 为true的情况，是上面的这一句 match = [ null, selector, null ]
+						// match[1] 为 true 的情况，是上面的这一句 match = [ null, selector, null ]
 						if (match[1]) {
 							// 传入上下文
 							context = context instanceof jQuery ? context[0] : context;
@@ -473,6 +473,7 @@
 
 			// For internal use only.
 			// Behaves like an Array's method, not like a jQuery method.
+			// 仅在内部使用
 			push: core_push,
 			sort: [].sort,
 			splice: [].splice
