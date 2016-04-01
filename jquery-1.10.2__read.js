@@ -6269,7 +6269,6 @@
 
 				// 事件的 add 方法
 				// jQuery 从 1.2.3 版本引入数据缓存系统，贯穿内部，为整个体系服务，事件体系也引入了这个缓存机制
-				// 遇到难懂的代码可以暂且跳过
 				add: function(elem, types, handler, data, selector) {
 					var tmp, events, t, handleObjIn,
 						special, eventHandle, handleObj,
@@ -6420,6 +6419,7 @@
 						// Add to the element's handler list, delegates in front
 						// 将事件处理函数推入处理列表
 						if (selector) {
+							// 冒泡标记
 							handlers.splice(handlers.delegateCount++, 0, handleObj);
 						} else {
 							handlers.push(handleObj);
@@ -6436,6 +6436,7 @@
 				},
 
 				// Detach an event or set of events from an element
+				// 移除事件是主要方法
 				remove: function(elem, types, handler, selector, mappedTypes) {
 					var j, handleObj, tmp,
 						origCount, t, events,
@@ -6702,7 +6703,8 @@
 
 					return event.result;
 				},
-
+				// 事件处理器
+				// 针对事件委托和原生事件（例如"click"）绑定，区分对待
 				handlers: function(event, handlers) {
 					var sel, handleObj, matches, i,
 						handlerQueue = [],
@@ -6757,7 +6759,7 @@
 
 					return handlerQueue;
 				},
-
+				// 对游览器的差异性进行包装处理
 				fix: function(event) {
 					if (event[jQuery.expando]) {
 						return event;
@@ -6776,6 +6778,7 @@
 					}
 					copy = fixHook.props ? this.props.concat(fixHook.props) : this.props;
 
+					// 将浏览器原生 Event 的属性赋值到新创建的jQuery.Event对象中去
 					event = new jQuery.Event(originalEvent);
 
 					i = copy.length;
@@ -6804,12 +6807,18 @@
 				},
 
 				// Includes some event props shared by KeyEvent and MouseEvent
+				// 存储了原生事件对象 event 的通用属性
 				props: "altKey bubbles cancelable ctrlKey currentTarget eventPhase metaKey relatedTarget shiftKey target timeStamp view which".split(" "),
 
+				// 对象用于缓存不同事件所属的事件类别
+				// fixHooks['click'] === jQuery.event.mouseHooks
+				// fixHooks['keydown'] === jQuery.event.keyHooks
 				fixHooks: {},
 
 				keyHooks: {
+					// 存储键盘事件的特有属性
 					props: "char charCode key keyCode".split(" "),
+					// 用于修改键盘事件的属性兼容性问题，用于统一接口
 					filter: function(event, original) {
 
 						// Add which for key events
@@ -6822,7 +6831,9 @@
 				},
 
 				mouseHooks: {
+					// 存储鼠标事件的特有属性
 					props: "button buttons clientX clientY fromElement offsetX offsetY pageX pageY screenX screenY toElement".split(" "),
+					// 用于修改鼠标事件的属性兼容性问题，用于统一接口
 					filter: function(event, original) {
 						var body, eventDoc, doc,
 							button = original.button,
@@ -6953,6 +6964,7 @@
 				}
 			};
 
+			// jQuery 重写了原生 event 事件
 			jQuery.Event = function(src, props) {
 				// Allow instantiation without the 'new' keyword
 				if (!(this instanceof jQuery.Event)) {
@@ -7200,34 +7212,48 @@
 				// selector: 一个选择器字符串，用于过滤出被选中的元素中能触发事件的后代元素
 				// data: 当一个事件被触发时，要传递给事件处理函数的
 				// handler: 事件被触发时，执行的函数
+				// on 方法实质只完成一些参数调整的工作，而实际负责事件绑定的是其内部 jQuery.event.add 方法
 				on: function(types, selector, data, fn, /*INTERNAL*/ one) {
 					var type, origFn;
 
 					// Types can be a map of types/handlers
+					// types 参数可能是个对象 传入了多个事件
 					if (typeof types === "object") {
 						// ( types-Object, selector, data )
+						// 简单的参数处理
+						// 没有传入 selector 的情况
 						if (typeof selector !== "string") {
 							// ( types-Object, data )
 							data = data || selector;
 							selector = undefined;
 						}
+						// 遍历 types
 						for (type in types) {
+							// 递归调用自己
 							this.on(type, selector, data, types[type], one);
 						}
+
 						return this;
 					}
 
+					// 参数处理
+					// 相当于传参为 elem.on(types,fn)
+					// elem.on('click',function(){ ... })
 					if (data == null && fn == null) {
 						// ( types, fn )
 						fn = selector;
 						data = selector = undefined;
+					// 参数处理
+					// 相当于传入 3 个参数
 					} else if (fn == null) {
 						if (typeof selector === "string") {
 							// ( types, selector, fn )
+							// .on( types, selector, fn )
 							fn = data;
 							data = undefined;
 						} else {
 							// ( types, data, fn )
+							// .on( types, data, fn )
 							fn = data;
 							data = selector;
 							selector = undefined;
@@ -7239,6 +7265,7 @@
 						return this;
 					}
 
+					// 仅在内部使用
 					if (one === 1) {
 						origFn = fn;
 						fn = function(event) {
@@ -7249,13 +7276,19 @@
 						// Use same guid so caller can remove using origFn
 						fn.guid = origFn.guid || (origFn.guid = jQuery.guid++);
 					}
+
+					// 上面处理完参数没有返回结果的，最后都是调用 add 方法
+					// jQuery.event.add 给选中元素注册事件处理程序
 					return this.each(function() {
 						jQuery.event.add(this, types, fn, data, selector);
 					});
 				},
+				// 调用了 jQuery.fn.on 方法
 				one: function(types, selector, data, fn) {
 					return this.on(types, selector, data, fn, 1);
 				},
+				// 移除事件处理函数
+				// off 事件主要是一些参数处理，事件的移除主要还是调用 jQuery.event.remove(this, types, fn, selector)
 				off: function(types, selector, fn) {
 					var handleObj, type;
 					if (types && types.preventDefault && types.handleObj) {
@@ -7268,6 +7301,8 @@
 						);
 						return this;
 					}
+					// types 是一个对象
+					// 批量移除
 					if (typeof types === "object") {
 						// ( types-object [, selector] )
 						for (type in types) {
@@ -7275,6 +7310,7 @@
 						}
 						return this;
 					}
+
 					if (selector === false || typeof selector === "function") {
 						// ( types [, fn] )
 						fn = selector;
@@ -7284,6 +7320,7 @@
 						fn = returnFalse;
 					}
 					return this.each(function() {
+						// 事件的移除主要还是调用 remove
 						jQuery.event.remove(this, types, fn, selector);
 					});
 				},
@@ -9174,12 +9211,14 @@
 					add(prefix, obj);
 				}
 			}
+			// 合并 15 种事件统一增加到 jQuery.fn 上
 			jQuery.each(("blur focus focusin focusout load resize scroll unload click dblclick " +
 				"mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
 				"change select submit keydown keypress keyup error contextmenu").split(" "), function(i, name) {
 
 				// Handle event binding
 				jQuery.fn[name] = function(data, fn) {
+					// 内部调用this.on / this.trigger
 					return arguments.length > 0 ?
 						this.on(name, null, data, fn) :
 						this.trigger(name);
@@ -9190,7 +9229,10 @@
 				hover: function(fnOver, fnOut) {
 					return this.mouseenter(fnOver).mouseleave(fnOut || fnOver);
 				},
-
+				// bind 与 unbind 内部调用的 this.on/this.off
+				// bind() 方法用于直接附加一个事件处理程序到元素上
+				// 处理程序附加到 jQuery 对象中当前选中的元素，所以，在 .bind() 绑定事件的时候，这些元素必须已经存在
+				// 没利用委托机制
 				bind: function(types, data, fn) {
 					return this.on(types, null, data, fn);
 				},
@@ -9198,6 +9240,9 @@
 					return this.off(types, null, fn);
 				},
 
+				// 同样调用的 this.on/this.off
+				// 所有匹配选择器（selector参数）的元素绑定一个或多个事件处理函数，基于一个指定的根元素的子集，
+				// 匹配的元素包括那些目前已经匹配到的元素，也包括那些今后可能匹配到的元素
 				delegate: function(selector, types, data, fn) {
 					return this.on(types, selector, data, fn);
 				},
