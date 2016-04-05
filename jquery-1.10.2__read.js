@@ -4684,7 +4684,7 @@
 
 				var ret, thisCache,
 					// 产生jQuery键值随机数 类似于： "11020056177454302087426"
-					// expando.jQuery = (core_version + Math.random()).replace(/\D/g, "");
+					// jQuery.expando = (core_version + Math.random()).replace(/\D/g, "");
 					// (core_version + Math.random()) 产生一串随机字符串 "1.10.20.6013481540139765"
 					// replace(/\D/g, "") 去掉非数字
 					internalKey = jQuery.expando,
@@ -6510,34 +6510,44 @@
 					}
 				},
 
+				// jQuery触发事件的核心方法是 jQuery.event.trigger。
+				// 它提供给客户端程序员使用的触发事件方法有两个：$.fn.trigger / $.fn.triggerHandler
 				trigger: function(event, data, elem, onlyHandlers) {
 					var handle, ontype, cur,
 						bubbleType, special, tmp, i,
 						eventPath = [elem || document],
+						// core_hasOwn = [].hasOwnProperty
 						type = core_hasOwn.call(event, "type") ? event.type : event,
 						namespaces = core_hasOwn.call(event, "namespace") ? event.namespace.split(".") : [];
 
 					cur = tmp = elem = elem || document;
 
 					// Don't do events on text and comment nodes
+					// nodeType = 3 -- Text
+					// nodeType = 8 -- Comment
 					if (elem.nodeType === 3 || elem.nodeType === 8) {
 						return;
 					}
 
 					// focus/blur morphs to focusin/out; ensure we're not firing them right now
+					// focus/blur 将变形为 focusin/focusout 另行处理
 					if (rfocusMorph.test(type + jQuery.event.triggered)) {
 						return;
 					}
 
+					// 对具有命名空间事件的处理
 					if (type.indexOf(".") >= 0) {
 						// Namespaced trigger; create a regexp to match event type in handle()
 						namespaces = type.split(".");
 						type = namespaces.shift();
 						namespaces.sort();
 					}
+
+					//
 					ontype = type.indexOf(":") < 0 && "on" + type;
 
 					// Caller can pass in a jQuery.Event object, Object, or just an event type string
+					//
 					event = event[jQuery.expando] ?
 						event :
 						new jQuery.Event(type, typeof event === "object" && event);
@@ -6586,6 +6596,11 @@
 					}
 
 					// Fire handlers on the event path
+					// 取handle
+					// 执行
+					// 执行通过onXXX方式添加的事件（如onclick="fun()"）
+					// 取父元素
+					// while循环不断重复这四步以模拟事件冒泡。直到window对象
 					i = 0;
 					while ((cur = eventPath[i++]) && !event.isPropagationStopped()) {
 
@@ -6608,6 +6623,7 @@
 					event.type = type;
 
 					// If nobody prevented the default action, do it now
+					// 这一段是对于浏览器默认行为的触发
 					if (!onlyHandlers && !event.isDefaultPrevented()) {
 
 						if ((!special._default || special._default.apply(eventPath.pop(), data) === false) &&
@@ -6645,6 +6661,7 @@
 					return event.result;
 				},
 
+				// 分派（执行）事件处理函数
 				dispatch: function(event) {
 
 					// Make a writable jQuery.Event from the native event object
@@ -7325,14 +7342,18 @@
 					});
 				},
 
+				// trigger 执行事件hanlder/执行冒泡/执行默认行为
 				trigger: function(type, data) {
 					return this.each(function() {
 						jQuery.event.trigger(type, data, this);
 					});
 				},
+				// triggerHandler 执行事件handler/不冒泡/不执行默认行为
 				triggerHandler: function(type, data) {
 					var elem = this[0];
 					if (elem) {
+						// 相比于上面的 trigger 方法
+						// 传了 true 的 triggerHander 就表示仅执行事件 handler ，不执行默认行为
 						return jQuery.event.trigger(type, data, elem, true);
 					}
 				}
@@ -11491,3 +11512,4 @@
 				}
 			}
 		})(window);
+
