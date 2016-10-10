@@ -200,6 +200,13 @@
 
 			// 构造函数
 			// 相当于 jQuery.prototype.constructor = jQuery
+			// 由于采用对象字面量的方式 jQuery.prototype = {} 重写了 jQuery.prototype
+			// 如果不加上下面这句，jQuery.prototype.constructor 将指向 Object，
+			// 为了严谨，可以在使用 jQuery.prototype = {} 重写整个 jQuery.prototype 的时候
+			// 加上此句，手动让 jQuery.prototype.constructor 指回 jQuery
+			// 如果采用 jQuery.prototype.init = function(){} 的方法一个一个新增原型方法
+			// 则不需要添加下面这句， jQuery.prototype.constructor 默认指向 jQuery
+			// 更为详细的原因可以看看高程3第六章
 			constructor: jQuery,
 
 			// 初始化方法
