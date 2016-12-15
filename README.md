@@ -59,7 +59,7 @@
 ## jQuery 整体架构图
 ![jQuery整体架构脑图，jQuery整体架构](https://raw.githubusercontent.com/chokcoco/jQuery-/master/mindMap/jQuery%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84.png)
 
-## 个人博客相关分析
+## 个人博客相关文章
 [【深入浅出jQuery】源码浅析--整体架构](http://www.cnblogs.com/coco1s/p/5261646.html)
 
 [【深入浅出jQuery】源码浅析2--奇技淫巧](http://www.cnblogs.com/coco1s/p/5303041.html)
