@@ -7472,18 +7472,24 @@
 				index: function(elem) {
 
 					// No argument, return index in parent
+					// 如果没有传入参数，那么
+					// 例如，调用方式： $("li").index( )  
 					if (!elem) {
+						// 如果元素存在并且拥有父节点，获取第一个元素前面的所有的同级元素的个数  
 						return (this[0] && this[0].parentNode) ? this.first().prevAll().length : -1;
 					}
 
 					// index in selector
+					// 如果指定参数为字符型，如调用：$("li").index( "#id" ) 
 					if (typeof elem === "string") {
+
 						return jQuery.inArray(this[0], jQuery(elem));
 					}
 
 					// Locate the position of the desired element
 					return jQuery.inArray(
 						// If it receives a jQuery object, the first element is used
+						// 如果是jQuery对象作为参数，那么获取参数第一个对象在调用选择器中的位置 
 						elem.jquery ? elem[0] : elem, this);
 				},
 
